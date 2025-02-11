@@ -1,8 +1,10 @@
-import json
-import yaml
 import ast
-import numpy as np
+import json
 from typing import List
+
+import numpy as np
+import yaml
+
 
 def str_to_list_of_np(s: str) -> List[np.ndarray]:
     """
@@ -10,6 +12,7 @@ def str_to_list_of_np(s: str) -> List[np.ndarray]:
     """
     ls = ast.literal_eval(s)
     return [np.array(arr) for arr in ls]
+
 
 def goal_from_params(params_file_val):
     """

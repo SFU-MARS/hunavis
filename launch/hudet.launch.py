@@ -6,17 +6,14 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
+from hunavis.utils import goal_from_params
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    OpaqueFunction,
-)
+from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
+                            OpaqueFunction)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import AndSubstitution, LaunchConfiguration, NotSubstitution
-
-from hunavis.utils import goal_from_params
+from launch.substitutions import (AndSubstitution, LaunchConfiguration,
+                                  NotSubstitution)
 
 """
 Human Detection Launch File
@@ -26,6 +23,7 @@ Human Detection Launch File
 DEFAULT_PARAMS_FILE = os.path.join(
     get_package_share_directory("hunavis"), "params", "params.yaml"
 )
+
 
 def launch_setup(context, *args, **kwargs):
     use_simulator = LaunchConfiguration("use_simulator")
@@ -118,6 +116,7 @@ def launch_setup(context, *args, **kwargs):
         people_visualizer_node,
     ]
 
+
 def generate_launch_description():
     return LaunchDescription(
         [
@@ -141,4 +140,3 @@ def generate_launch_description():
             OpaqueFunction(function=launch_setup),
         ]
     )
-

@@ -3,12 +3,13 @@ import rclpy
 from geometry_msgs.msg import Point, PointStamped, Vector3
 from people_msgs.msg import People
 from rclpy.node import Node
-from hunavis.utils import str_to_list_of_np
 from std_msgs.msg import ColorRGBA
 from tf2_geometry_msgs import do_transform_point
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
+
+from hunavis.utils import str_to_list_of_np
 
 
 class PeopleVisualizer(Node):
@@ -64,7 +65,7 @@ class PeopleVisualizer(Node):
             [1.0, 1.0, 1.0, 0.7],
         ]
         self.num_human_colors = len(self.human_colors)
-        
+
         # Random offsets to clearly show goals common to multiple people
         self.goal_offsets = -0.05 + 0.1 * np.random.random(len(self.goals))
 
