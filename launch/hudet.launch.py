@@ -23,6 +23,9 @@ Human Detection Launch File
 DEFAULT_PARAMS_FILE = os.path.join(
     get_package_share_directory("hunavis"), "params", "params.yaml"
 )
+DEFAULT_RVIZ_FILE = os.path.join(
+    get_package_share_directory("hunavis"), "rviz", "default_sim_view.rviz"    
+)
 
 
 def launch_setup(context, *args, **kwargs):
@@ -36,6 +39,7 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(run_rviz),
         package="rviz2",
         executable="rviz2",
+        arguments=['-d', DEFAULT_RVIZ_FILE],
         output={"both": "log"},
     )
     # Activate the following Nodes only if we are running experiments in the real world
