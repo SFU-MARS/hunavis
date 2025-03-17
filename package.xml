@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hunavis</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="michael_lu_3@sfu.ca">Michael Lu</maintainer>
+  <license>TODO: License declaration</license>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>people_msgs</depend>
+
+	<exec_depend>rviz2</exec_depend>
+	<exec_depend>launch_ros</exec_depend>
+	<exec_depend>robot_state_publisher</exec_depend>
+	<exec_depend>zed_wrapper</exec_depend>
+	<exec_depend>zed_interfaces</exec_depend>
+	<exec_depend>zed_components</exec_depend>
+	<exec_depend>grid_map_rviz_plugin</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
