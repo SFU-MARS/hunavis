@@ -7,8 +7,8 @@ hunav_loader:
     map: map_name
     publish_people: true
     agents:
-      # - agent1
-      - agent2
+      - agent1
+      # - agent2
       # - agent3
       # - agent4
       # - agent5
@@ -30,8 +30,8 @@ hunav_loader:
         social_force_factor: 2.0
         other_force_factor: 2.0
       init_pose:
-        x: -0.4888280928134918
-        y: 9.381781578063965
+        x: 3.0
+        y: 3.0
         z: 1.250000
         h: 0.0
       goal_radius: 0.2
@@ -41,26 +41,21 @@ hunav_loader:
         - g1
         - g2
         - g3
-        - g4
       g0:
-        x: -3.25
-        y: 8.0
+        x: 3.0
+        y: -3.0
         h: 1.250000
       g1:
-        x: -3.25
-        y: 7.0
+        x: -3.0
+        y: -3.0
         h: 1.250000
       g2:
-        x: -2.6
-        y: 11.0
+        x: -3.0
+        y: 3.0
         h: 1.250000
       g3:
-        x: -2.0
-        y: 5.5
-        h: 1.250000
-      g4:
-        x: -2.0
-        y: 4.0
+        x: 3.0
+        y: 3.0
         h: 1.250000
     agent2: # agent walks back and forth
       id: 2

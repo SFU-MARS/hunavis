@@ -16,7 +16,6 @@
 
 import os
 
-import numpy as np
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
@@ -55,12 +54,12 @@ def generate_launch_description():
     world = LaunchConfiguration("world")
 
     pose = {
-        "x": LaunchConfiguration("x_pose", default="-2.9"),
-        "y": LaunchConfiguration("y_pose", default="7.5"),
+        "x": LaunchConfiguration("x_pose", default="0.0"),
+        "y": LaunchConfiguration("y_pose", default="0.0"),
         "z": LaunchConfiguration("z_pose", default="0.01"),
-        "R": LaunchConfiguration("roll", default="0.00"),
-        "P": LaunchConfiguration("pitch", default="0.00"),
-        "Y": LaunchConfiguration("yaw", default="-1.5708"),
+        "R": LaunchConfiguration("roll", default="0.0"),
+        "P": LaunchConfiguration("pitch", default="0.0"),
+        "Y": LaunchConfiguration("yaw", default="0.0"),
     }
 
     robot_name = LaunchConfiguration("robot_name")
@@ -127,7 +126,7 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         "map",
-        default_value=os.path.join(bringup_dir, "maps", "turtlebot3_world.yaml"),
+        default_value=os.path.join(hunavis_dir, "maps", "empty_room.yaml"),
         description="Full path to map file to load",
     )
 
@@ -139,7 +138,6 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         "params_file",
-        # default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
         default_value=os.path.join(hunavis_dir, "params", "tb3_custom_sim.yaml"),
         description="Full path to the ROS2 parameters file to use for all launched nodes",
     )
@@ -181,7 +179,7 @@ def generate_launch_description():
     )
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
-        "use_rviz", default_value="False", description="Whether to start RVIZ"
+        "use_rviz", default_value="True", description="Whether to start RVIZ"
     )
 
     declare_simulator_cmd = DeclareLaunchArgument(
@@ -193,8 +191,7 @@ def generate_launch_description():
         # TODO(orduno) Switch back once ROS argument passing has been fixed upstream
         #              https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/91
         default_value=os.path.join(
-            get_package_share_directory("turtlebot3_gazebo"),
-            "worlds/turtlebot3_worlds/waffle.model",
+            hunavis_dir, "worlds", "empty_room.world"
         ),
         description="Full path to world model file to load",
     )
@@ -221,7 +218,7 @@ def generate_launch_description():
             world,
             "--ros-args",
             "--params-file",
-            os.path.join(hunavis_dir, "params", "params.yaml"),
+            os.path.join(hunavis_dir, "params", "gazebo.yaml"),
         ],
         cwd=[launch_dir],
         output="screen",
@@ -303,7 +300,7 @@ def generate_launch_description():
     )
 
     pub_robot_pose_node = Node(
-        package="robot_utils",
+        package="hunavis",
         executable="publish_global_pose",
         arguments=["--ros-args", "--log-level", "WARN"],
     )
@@ -336,6 +333,7 @@ def generate_launch_description():
     ld.add_action(start_gazebo_server_cmd)
     ld.add_action(start_gazebo_client_cmd)
     ld.add_action(start_gazebo_spawner_cmd)
+    ld.add_action(rviz_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(start_robot_state_publisher_cmd)

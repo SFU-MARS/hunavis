@@ -21,8 +21,8 @@ from launch.substitutions import (EnvironmentVariable, LaunchConfiguration,
 Main launch file to start Gazebo simulation and HuNavSim
 """
 
-WORLD_DIR = "world_dir"  # Change this
-PARAMS_FILE = "params.yaml"
+WORLD_DIR = "hunavis"  # Change this
+PARAMS_FILE = "hunavsim.yaml"
 
 
 def generate_launch_description():
@@ -213,7 +213,7 @@ def generate_launch_description():
 
     declare_arg_world = DeclareLaunchArgument(
         "base_world",
-        default_value="office_no_doors_Lhallway.world",
+        default_value="empty_room.world",
         description="Specify world file name",
     )
     declare_gz_obs = DeclareLaunchArgument(
@@ -283,12 +283,12 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory("nav2_bringup")
     robot_sdf = LaunchConfiguration("robot_sdf")
     pose = {
-        "x": LaunchConfiguration("x_pose", default="-2.9"),
-        "y": LaunchConfiguration("y_pose", default="7.5"),
+        "x": LaunchConfiguration("x_pose", default="0.0"),
+        "y": LaunchConfiguration("y_pose", default="0.0"),
         "z": LaunchConfiguration("z_pose", default="0.01"),
-        "R": LaunchConfiguration("roll", default="0.00"),
-        "P": LaunchConfiguration("pitch", default="0.00"),
-        "Y": LaunchConfiguration("yaw", default="-1.5708"),
+        "R": LaunchConfiguration("roll", default="0.0"),
+        "P": LaunchConfiguration("pitch", default="0.0"),
+        "Y": LaunchConfiguration("yaw", default="0.0"),
     }
     namespace = LaunchConfiguration("namespace")
 
