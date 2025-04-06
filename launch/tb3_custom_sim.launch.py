@@ -76,9 +76,12 @@ def generate_launch_description():
                 plugin="rtabmap_util::PointCloudXYZ",
                 name="points_xyz_rt",
                 remappings=[
-                    ("depth/image", "/camera/camera/depth/image_rect_raw"),
-                    ("depth/camera_info", "/camera/camera/depth/camera_info"),
-                    ("cloud", "/camera/camera/depth/color/points"),
+                    ("depth/image", "/intel_realsense_r200_depth/depth/image_raw"),
+                    (
+                        "depth/camera_info",
+                        "/intel_realsense_r200_depth/depth/camera_info",
+                    ),
+                    ("cloud", "/intel_realsense_r200_depth/points"),
                 ],
                 parameters=[
                     {"decimation": 4},

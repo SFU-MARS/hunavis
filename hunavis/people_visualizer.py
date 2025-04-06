@@ -29,11 +29,11 @@ class PeopleVisualizer(Node):
 
         ### Publishers and subscribers
         if self.use_simulator:
-            self.subscriber = self.create_subscription(
-                People, "/people", self.position_callback, 10
+            self._subscriber = self.create_subscription(
+                People, "/people", self._position_callback, 10
             )
 
-            self.human_goals_timer = self.create_timer(1.0, self.goal_callback)
+            self._human_goals_timer = self.create_timer(1.0, self._goal_callback)
 
             self._human_goals_publisher = self.create_publisher(
                 MarkerArray, "/human_goals", 10
@@ -41,19 +41,18 @@ class PeopleVisualizer(Node):
         else:
             from zed_interfaces.msg import ObjectsStamped
 
-            self.subscriber = self.create_subscription(
+            self._subscriber = self.create_subscription(
                 ObjectsStamped,
                 "/zed/zed_node/obj_det/objects",
-                self.position_callback,
+                self._position_callback,
                 10,
             )
-            self.tf_buffer = Buffer()
-            self.tf_listener = TransformListener(self.tf_buffer, self)
+            self._tf_buffer = Buffer()
+            self._tf_listener = TransformListener(self._tf_buffer, self)
 
         self._human_positions_publisher = self.create_publisher(
             MarkerArray, "/human_positions", 10
         )
-
         ### Member attributes
         self.human_colors = [
             [0.1, 0.1, 1.0, 0.7],
@@ -69,7 +68,7 @@ class PeopleVisualizer(Node):
         # Random offsets to clearly show goals common to multiple people
         self.goal_offsets = -0.05 + 0.1 * np.random.random(len(self.goals))
 
-    def position_callback(self, msg):
+    def _position_callback(self, msg):
         # Human positions
         human_positions_markers = MarkerArray()
 
@@ -100,7 +99,7 @@ class PeopleVisualizer(Node):
                     p1.point.y = float(position[1])
                     p1.point.z = float(position[2])
 
-                    p2 = self.tf_buffer.transform(p1, "map")
+                    p2 = self._tf_buffer.transform(p1, "map")
                     x = p2.point.x
                     y = p2.point.y
 
@@ -126,7 +125,7 @@ class PeopleVisualizer(Node):
         # Publish
         self._human_positions_publisher.publish(human_positions_markers)
 
-    def goal_callback(self):
+    def _goal_callback(self):
         """
         Publishes ground-truth goals for all humans (only in simulation)
         """
