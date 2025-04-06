@@ -592,6 +592,34 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Realsense
+    - Class: rviz_common/Group
+      Displays:
+        - Class: rviz_default_plugins/MarkerArray
+          Enabled: true
+          Name: Human Goals
+          Namespaces:
+            goals_0: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /human_goals
+          Value: true
+        - Class: rviz_default_plugins/MarkerArray
+          Enabled: true
+          Name: Human Positions
+          Namespaces:
+            human: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /human_positions
+          Value: true
+      Enabled: true
+      Name: Human Detection
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
