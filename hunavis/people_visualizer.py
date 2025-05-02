@@ -1,7 +1,7 @@
 import numpy as np
 import rclpy
 from geometry_msgs.msg import Point, PointStamped, Vector3
-from people_msgs.msg import People
+from people_msgs.msg import People, Person
 from rclpy.node import Node
 from std_msgs.msg import ColorRGBA
 from tf2_geometry_msgs import do_transform_point
@@ -49,7 +49,8 @@ class PeopleVisualizer(Node):
             )
             self._tf_buffer = Buffer()
             self._tf_listener = TransformListener(self._tf_buffer, self)
-
+            self._human_positions_world_publisher = self.create_publisher(People, "/human_positions_world", 10)
+            
         self._human_positions_publisher = self.create_publisher(
             MarkerArray, "/human_positions", 10
         )
@@ -89,6 +90,10 @@ class PeopleVisualizer(Node):
                     )
                 )
         else:  # Real world
+            people_msg = People()
+            people_msg.header.stamp = msg.header.stamp
+            people_msg.header.frame_id = 'map'
+            
             for object in msg.objects:
                 if object.label == "Person":
                     p1 = PointStamped()
@@ -102,6 +107,10 @@ class PeopleVisualizer(Node):
                     p2 = self._tf_buffer.transform(p1, "map")
                     x = p2.point.x
                     y = p2.point.y
+                    
+                    person = Person()
+                    person.position = Point(x=x, y=y)
+                    people_msg.people.append(person)
 
                     color_rbga = self.human_colors[
                         object.label_id % self.num_human_colors
@@ -121,6 +130,7 @@ class PeopleVisualizer(Node):
                             text=marker_text,
                         )
                     )
+            self._human_positions_world_publisher.publish(people_msg)
 
         # Publish
         self._human_positions_publisher.publish(human_positions_markers)
