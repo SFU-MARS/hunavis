@@ -1,3 +1,4 @@
+from typing import Union, List
 import numpy as np
 import rclpy
 from geometry_msgs.msg import Point, PointStamped, Vector3
@@ -157,7 +158,7 @@ def create_marker_array(
     xyis: np.ndarray,
     marker_type: str,
     marker_namespace: str,
-    color_rgba: list | np.ndarray,
+    color_rgba: Union[List, np.ndarray],
     markers: MarkerArray = None,
 ):
     """
