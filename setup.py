@@ -33,8 +33,9 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "publish_global_pose = hunavis.robot_pose_publisher:main",            
+            "publish_global_pose = hunavis.robot_pose_publisher:main",
             "people_visualizer = hunavis.people_visualizer:main",
+            "tf_keyboard_publisher = hunavis.tf_keyboard_publisher:main",
         ],
     },
 )

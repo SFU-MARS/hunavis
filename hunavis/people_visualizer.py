@@ -50,8 +50,10 @@ class PeopleVisualizer(Node):
             )
             self._tf_buffer = Buffer()
             self._tf_listener = TransformListener(self._tf_buffer, self)
-            self._human_positions_world_publisher = self.create_publisher(People, "/human_positions_world", 10)
-            
+            self._human_positions_world_publisher = self.create_publisher(
+                People, "/human_positions_world", 10
+            )
+
         self._human_positions_publisher = self.create_publisher(
             MarkerArray, "/human_positions", 10
         )
@@ -93,8 +95,8 @@ class PeopleVisualizer(Node):
         else:  # Real world
             people_msg = People()
             people_msg.header.stamp = msg.header.stamp
-            people_msg.header.frame_id = 'map'
-            
+            people_msg.header.frame_id = "map"
+
             for object in msg.objects:
                 if object.label == "Person":
                     p1 = PointStamped()
@@ -108,7 +110,7 @@ class PeopleVisualizer(Node):
                     p2 = self._tf_buffer.transform(p1, "map")
                     x = p2.point.x
                     y = p2.point.y
-                    
+
                     person = Person()
                     person.position = Point(x=x, y=y)
                     people_msg.people.append(person)

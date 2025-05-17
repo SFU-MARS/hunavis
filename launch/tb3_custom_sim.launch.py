@@ -21,8 +21,11 @@ from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
-                            IncludeLaunchDescription)
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
@@ -193,9 +196,7 @@ def generate_launch_description():
         "world",
         # TODO(orduno) Switch back once ROS argument passing has been fixed upstream
         #              https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/91
-        default_value=os.path.join(
-            hunavis_dir, "worlds", "empty_room.world"
-        ),
+        default_value=os.path.join(hunavis_dir, "worlds", "empty_room.world"),
         description="Full path to world model file to load",
     )
 

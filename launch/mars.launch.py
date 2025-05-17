@@ -7,15 +7,30 @@ from launch_ros.substitutions import FindPackageShare
 from scripts import GazeboRosPaths
 
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
-                            IncludeLaunchDescription, LogInfo,
-                            RegisterEventHandler, SetEnvironmentVariable,
-                            Shutdown, TimerAction)
-from launch.event_handlers import (OnExecutionComplete, OnProcessExit,
-                                   OnProcessIO, OnProcessStart, OnShutdown)
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    LogInfo,
+    RegisterEventHandler,
+    SetEnvironmentVariable,
+    Shutdown,
+    TimerAction,
+)
+from launch.event_handlers import (
+    OnExecutionComplete,
+    OnProcessExit,
+    OnProcessIO,
+    OnProcessStart,
+    OnShutdown,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import (EnvironmentVariable, LaunchConfiguration,
-                                  PathJoinSubstitution, PythonExpression)
+from launch.substitutions import (
+    EnvironmentVariable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    PythonExpression,
+)
 
 """
 Main launch file to start Gazebo simulation and HuNavSim
