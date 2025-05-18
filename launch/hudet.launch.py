@@ -16,18 +16,12 @@ from launch_ros.actions import Node
 from hunavis.utils import goal_from_params
 
 SCENARIO_PARAMS_FILE = "hunavsim.yaml"
-CAMERA_TF_PARAMS_FILE = "tf_keyboard_publisher.yaml"
 
 DEFAULT_PARAMS_FILES = {
     "scenario": os.path.join(
         get_package_share_directory("hunavis"),
         "params",
         SCENARIO_PARAMS_FILE,
-    ),
-    "camera_tf": os.path.join(
-        get_package_share_directory("hunavis"),
-        "params",
-        CAMERA_TF_PARAMS_FILE,
     ),
     "zed_launch": os.path.join(
         get_package_share_directory("hunavis"), "params", "zed_launch_args.yaml"
@@ -38,7 +32,6 @@ DEFAULT_PARAMS_FILES = {
 def launch_setup(context, *args, **kwargs):
     use_simulator = LaunchConfiguration("use_simulator")
     scenario_params_file = LaunchConfiguration("scenario_params_file")
-    camera_tf_params_file = LaunchConfiguration("camera_tf_params_file")
     zed_launch_args_file = LaunchConfiguration("zed_launch_args_file")
     run_rviz = LaunchConfiguration("run_rviz")
 
@@ -79,14 +72,6 @@ def launch_setup(context, *args, **kwargs):
         ),
         launch_arguments=zed_launch_args,
     )
-    camera_map_tf = Node(
-        condition=IfCondition(NotSubstitution(use_simulator)),
-        package="hunavis",
-        executable="tf_keyboard_publisher",
-        parameters=[
-            camera_tf_params_file,
-        ],
-    )
 
     # Load list of human goals from the simulation parameters
     humans_goals_str = goal_from_params(scenario_params_file_val)
@@ -102,7 +87,6 @@ def launch_setup(context, *args, **kwargs):
     return [
         rviz_node,
         zed_wrapper_launch,
-        camera_map_tf,
         people_visualizer_node,
     ]
 
@@ -120,11 +104,6 @@ def generate_launch_description():
                 "scenario_params_file",
                 default_value=DEFAULT_PARAMS_FILES["scenario"],
                 description="Parameter file to use for scenario",
-            ),
-            DeclareLaunchArgument(
-                "camera_tf_params_file",
-                default_value=DEFAULT_PARAMS_FILES["camera_tf"],
-                description="Parameter file to use for camera tf",
             ),
             DeclareLaunchArgument(
                 "zed_launch_args_file",
