@@ -1,15 +1,17 @@
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import TransformStamped
-from tf2_ros import TransformBroadcaster
-from std_srvs.srv import Empty
-import threading
-import termios
-import tty
-import sys
-import select
 import math
+import select
+import sys
+import termios
+import threading
+import tty
 from typing import List
+
+import rclpy
+from geometry_msgs.msg import TransformStamped
+from rclpy.node import Node
+from std_srvs.srv import Empty
+from tf2_ros import TransformBroadcaster
+
 
 # Helper function to convert Euler angles (roll, pitch, yaw) to a quaternion
 def euler_to_quaternion(roll: float, pitch: float, yaw: float) -> tuple:
@@ -44,23 +46,23 @@ class TFKeyboardPublisher(Node):
     """
 
     def __init__(self) -> None:
-        super().__init__('tf_keyboard_publisher')
+        super().__init__("tf_keyboard_publisher")
 
         # Declare all parameters (initial values from YAML)
-        self.declare_parameter('default_transform', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        self.declare_parameter('parent_frame_id', 'map')
-        self.declare_parameter('child_frame_id', 'base_link')
-        self.declare_parameter('handedness', 'right')
-        self.declare_parameter('position_step', 0.01)  # meters
-        self.declare_parameter('rotation_step', 1.0)   # degrees
+        self.declare_parameter("default_transform", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.declare_parameter("parent_frame_id", "map")
+        self.declare_parameter("child_frame_id", "base_link")
+        self.declare_parameter("handedness", "right")
+        self.declare_parameter("position_step", 0.01)  # meters
+        self.declare_parameter("rotation_step", 1.0)  # degrees
 
         # Get initial values from parameters
-        self.default_transform = self.get_parameter('default_transform').value
-        self.parent_frame = self.get_parameter('parent_frame_id').value
-        self.child_frame = self.get_parameter('child_frame_id').value
-        self.handedness = self.get_parameter('handedness').value
-        self.position_step = self.get_parameter('position_step').value
-        self.rotation_step_deg = self.get_parameter('rotation_step').value
+        self.default_transform = self.get_parameter("default_transform").value
+        self.parent_frame = self.get_parameter("parent_frame_id").value
+        self.child_frame = self.get_parameter("child_frame_id").value
+        self.handedness = self.get_parameter("handedness").value
+        self.position_step = self.get_parameter("position_step").value
+        self.rotation_step_deg = self.get_parameter("rotation_step").value
         self.rotation_step = math.radians(self.rotation_step_deg)
 
         self.set_transform_from_list(self.default_transform)
@@ -70,13 +72,12 @@ class TFKeyboardPublisher(Node):
         self.timer = self.create_timer(0.1, self.publish_transform)
 
         # Services
-        self.create_service(Empty, 'reset_transform', self.reset_callback)
+        self.create_service(Empty, "reset_transform", self.reset_callback)
 
         self.get_logger().info("TF keyboard node started.")
         self.print_help()
-        
-        threading.Thread(target=self.keyboard_listener, daemon=True).start()
 
+        threading.Thread(target=self.keyboard_listener, daemon=True).start()
 
     def set_transform_from_list(self, vals: List[float]) -> None:
         """Set the current transform from a 6D list."""
@@ -98,7 +99,7 @@ class TFKeyboardPublisher(Node):
         t.child_frame_id = self.child_frame
 
         x, y, z = self.x, self.y, self.z
-        if self.handedness == 'left':
+        if self.handedness == "left":
             y = -y
 
         t.transform.translation.x = x
@@ -113,7 +114,9 @@ class TFKeyboardPublisher(Node):
 
         self.br.sendTransform(t)
 
-    def reset_callback(self, request: Empty.Request, response: Empty.Response) -> Empty.Response:
+    def reset_callback(
+        self, request: Empty.Request, response: Empty.Response
+    ) -> Empty.Response:
         """Reset transform to the default."""
         self.save_history()
         self.set_transform_from_list(self.default_transform)
@@ -122,10 +125,11 @@ class TFKeyboardPublisher(Node):
 
     def keyboard_listener(self) -> None:
         """Listen for keyboard input to update the transform in real time."""
+
         def get_key() -> str:
             tty.setraw(sys.stdin.fileno())
             rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-            key = sys.stdin.read(1) if rlist else ''
+            key = sys.stdin.read(1) if rlist else ""
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
             return key
 
@@ -133,15 +137,21 @@ class TFKeyboardPublisher(Node):
         settings = termios.tcgetattr(sys.stdin)
 
         move_bindings = {
-            'q': (1, 0, 0), 'a': (-1, 0, 0),
-            'w': (0, 1, 0), 's': (0, -1, 0),
-            'e': (0, 0, 1), 'd': (0, 0, -1)
+            "q": (1, 0, 0),
+            "a": (-1, 0, 0),
+            "w": (0, 1, 0),
+            "s": (0, -1, 0),
+            "e": (0, 0, 1),
+            "d": (0, 0, -1),
         }
 
         rotate_bindings = {
-            'u': (1, 0, 0), 'j': (-1, 0, 0),
-            'i': (0, 1, 0), 'k': (0, -1, 0),
-            'o': (0, 0, 1), 'l': (0, 0, -1)
+            "u": (1, 0, 0),
+            "j": (-1, 0, 0),
+            "i": (0, 1, 0),
+            "k": (0, -1, 0),
+            "o": (0, 0, 1),
+            "l": (0, 0, -1),
         }
 
         try:
@@ -161,38 +171,46 @@ class TFKeyboardPublisher(Node):
                     self.pitch += dp * self.rotation_step
                     self.yaw += dyaw * self.rotation_step
                     self.print_current_transform()
-                elif key == 'r':
+                elif key == "r":
                     self.save_history()
                     self.set_transform_from_list(self.default_transform)
                     self.get_logger().info("Reset via keyboard.")
                     self.print_current_transform()
-                elif key == 'z':
+                elif key == "z":
                     if self.history:
                         self.set_transform_from_list(self.history.pop())
                         self.get_logger().info("Undo last change.")
                         self.print_current_transform()
                     else:
                         self.get_logger().info("No undo history.")
-                elif key == 'h':
-                    self.handedness = 'left' if self.handedness == 'right' else 'right'
+                elif key == "h":
+                    self.handedness = "left" if self.handedness == "right" else "right"
                     self.get_logger().info(f"Switched handedness to: {self.handedness}")
-                elif key == '=':
+                elif key == "=":
                     self.position_step *= 1.5
-                    self.get_logger().info(f"Position step increased: {self.position_step:.4f} m")
-                elif key == '-':
+                    self.get_logger().info(
+                        f"Position step increased: {self.position_step:.4f} m"
+                    )
+                elif key == "-":
                     self.position_step /= 1.5
-                    self.get_logger().info(f"Position step decreased: {self.position_step:.4f} m")
-                elif key == ']':
+                    self.get_logger().info(
+                        f"Position step decreased: {self.position_step:.4f} m"
+                    )
+                elif key == "]":
                     self.rotation_step_deg *= 1.5
                     self.rotation_step = math.radians(self.rotation_step_deg)
-                    self.get_logger().info(f"Rotation step increased: {self.rotation_step_deg:.2f}°")
-                elif key == '[':
+                    self.get_logger().info(
+                        f"Rotation step increased: {self.rotation_step_deg:.2f}°"
+                    )
+                elif key == "[":
                     self.rotation_step_deg /= 1.5
                     self.rotation_step = math.radians(self.rotation_step_deg)
-                    self.get_logger().info(f"Rotation step decreased: {self.rotation_step_deg:.2f}°")
-                elif key == '/':
+                    self.get_logger().info(
+                        f"Rotation step decreased: {self.rotation_step_deg:.2f}°"
+                    )
+                elif key == "/":
                     self.print_help()
-                elif key == '\x03':  # CTRL+C
+                elif key == "\x03":  # CTRL+C
                     break
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
@@ -221,6 +239,7 @@ class TFKeyboardPublisher(Node):
             + "Press / for help again.\n"
         )
         self.get_logger().info(help_msg)
+
 
 def main(args: List[str] = None) -> None:
     rclpy.init(args=args)

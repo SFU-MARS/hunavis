@@ -2,10 +2,6 @@ import os
 from os import path
 
 from ament_index_python.packages import get_package_share_directory
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-from scripts import GazeboRosPaths
-
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -31,6 +27,9 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+from scripts import GazeboRosPaths
 
 """
 Main launch file to start Gazebo simulation and HuNavSim

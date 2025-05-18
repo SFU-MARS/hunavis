@@ -1,4 +1,5 @@
-from typing import Union, List
+from typing import List, Union
+
 import numpy as np
 import rclpy
 from geometry_msgs.msg import Point, PointStamped, Vector3
