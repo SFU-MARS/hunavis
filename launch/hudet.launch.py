@@ -1,6 +1,6 @@
-import math
 import os
 
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
@@ -17,19 +17,26 @@ from hunavis.utils import goal_from_params
 
 SCENARIO_PARAMS_FILE = "hunavsim.yaml"
 
-DEFAULT_PARAMS_FILE = os.path.join(
-    get_package_share_directory("hunavis"),
-    "params",
-    SCENARIO_PARAMS_FILE,
-)
+DEFAULT_PARAMS_FILES = {
+    "scenario": os.path.join(
+        get_package_share_directory("hunavis"),
+        "params",
+        SCENARIO_PARAMS_FILE,
+    ),
+    "zed_launch": os.path.join(
+        get_package_share_directory("hunavis"), "params", "zed_launch_args.yaml"
+    ),
+}
 
 
 def launch_setup(context, *args, **kwargs):
     use_simulator = LaunchConfiguration("use_simulator")
-    params_file = LaunchConfiguration("params_file")
+    scenario_params_file = LaunchConfiguration("scenario_params_file")
+    zed_launch_args_file = LaunchConfiguration("zed_launch_args_file")
     run_rviz = LaunchConfiguration("run_rviz")
 
-    params_file_val = params_file.perform(context)
+    scenario_params_file_val = scenario_params_file.perform(context)
+    zed_launch_args_file_val = zed_launch_args_file.perform(context)
 
     rviz_node = Node(
         condition=IfCondition(run_rviz),
@@ -47,46 +54,27 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Activate the following Nodes only if we are running experiments in the real world
+    with open(zed_launch_args_file_val, "r") as f:
+        zed_args_dict = yaml.safe_load(f)
+
+    zed_launch_args = [(key, str(value)) for key, value in zed_args_dict.items()]
+
     zed_wrapper_launch = IncludeLaunchDescription(
-        # if not `use_simulator`
-        condition=IfCondition(NotSubstitution(use_simulator)),
+        condition=IfCondition(NotSubstitution(use_simulator)),  # if not use_simulator
         launch_description_source=PythonLaunchDescriptionSource(
             [
-                get_package_share_directory("hunavis"),
-                "/launch/zed_camera.launch.py",
+                os.path.join(
+                    get_package_share_directory("zed_wrapper"),
+                    "launch",
+                    "zed_camera.launch.py",
+                )
             ]
         ),
-        launch_arguments={
-            "camera_model": "zed2i",
-            "publish_tf": "false",
-        }.items(),
+        launch_arguments=zed_launch_args,
     )
-    camera_map_tf = Node(
-        condition=IfCondition(NotSubstitution(use_simulator)),
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=[
-            "--x",
-            "-1.8",
-            "--y",
-            "1.4",
-            "--z",
-            "2.6",
-            "--yaw",
-            f"{math.pi/2}",
-            "--pitch",
-            "0.28",
-            "--roll",
-            "0",
-            "--frame-id",
-            "map",
-            "--child-frame-id",
-            "zed_camera_link",
-        ],
-    )  # Dummy values; change according to pose changes wrt map
 
     # Load list of human goals from the simulation parameters
-    humans_goals_str = goal_from_params(params_file_val)
+    humans_goals_str = goal_from_params(scenario_params_file_val)
 
     people_visualizer_node = Node(
         package="hunavis",
@@ -98,8 +86,7 @@ def launch_setup(context, *args, **kwargs):
     )
     return [
         rviz_node,
-        # zed_wrapper_launch,
-        camera_map_tf,
+        zed_wrapper_launch,
         people_visualizer_node,
     ]
 
@@ -114,9 +101,14 @@ def generate_launch_description():
                 choices=["True", "False"],
             ),
             DeclareLaunchArgument(
-                "params_file",
-                default_value=DEFAULT_PARAMS_FILE,
-                description="Parameter file to use",
+                "scenario_params_file",
+                default_value=DEFAULT_PARAMS_FILES["scenario"],
+                description="Parameter file to use for scenario",
+            ),
+            DeclareLaunchArgument(
+                "zed_launch_args_file",
+                default_value=DEFAULT_PARAMS_FILES["zed_launch"],
+                description="File containing launch arguments for zed camera launch",
             ),
             DeclareLaunchArgument(
                 "run_rviz",

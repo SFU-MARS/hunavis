@@ -102,13 +102,19 @@ class PeopleVisualizer(Node):
                 if object.label == "Person":
                     p1 = PointStamped()
                     p1.header = msg.header
+                    p1.header.stamp = rclpy.time.Time().to_msg()
 
                     position = object.position
                     p1.point.x = float(position[0])
                     p1.point.y = float(position[1])
                     p1.point.z = float(position[2])
 
-                    p2 = self._tf_buffer.transform(p1, "map")
+                    try:
+                        p2 = self._tf_buffer.transform(p1, "map")
+                    except TransformException as e:
+                        self.get_logger().warn(f"Could not transform pose: {e}")
+                        return
+                        
                     x = p2.point.x
                     y = p2.point.y
 

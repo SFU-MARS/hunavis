@@ -1,8 +1,0 @@
-tf_keyboard_publisher:
-  ros__parameters:
-    default_transform: [0.0, 0.0, 0.1, 0.0, 0.0, 0.0]
-    parent_frame_id: "map"
-    child_frame_id: "base_link"
-    handedness: "right"
-    position_step: 0.01
-    rotation_step: 1.0
