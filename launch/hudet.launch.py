@@ -1,3 +1,33 @@
+"""
+Starts human detection using a Zed2 camera. It launches
+- rviz
+- zed_wrapper_launch (starts Zed2 camera if use_simulator:=False)
+- people_visualizer_node (shows detected humans as markers in rviz)
+
+Arguments
+ - use_simulator: 
+    - If True, zed_wrapper_launch would not run. Instead, the scenario specified in 
+      scenario_params_file will be simulated using hunavsim.
+    - If False, zed_camera.launch.py (from zed_wrapper) would run, using launch
+      arguments specified in the yaml file specified by zed_launch_args_file.
+    - Note: For fixed cameras (e.g. detached from a robot), the tf_keyboard_publisher
+            node from this repo can be run to adjust the map->camera tf in real time.
+            Example parameters of that node are found in params/zed_common.yaml, 
+            which is also the zed node parameters file.
+
+- scenario_params_file: (ignored if use_simulator:=False)
+    - Parameter file defining the simulation scenario. 
+      Defaults to params/hunavsim.yaml
+
+- zed_launch_args_file: (ignored if use_simulator:=True)
+    - File containing the launch arguments to zed_camera.launch.py, including another
+      parameter file that specifies the parameters of the zed node.
+      Defaults to params/zed_launch_args.yaml
+
+- run_rviz:
+    - Whether to run rviz
+"""
+
 import os
 
 import yaml
@@ -97,23 +127,27 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "use_simulator",
                 default_value="True",
-                description="Whether to use simulator",
+                description="Whether to use simulator.",
                 choices=["True", "False"],
             ),
             DeclareLaunchArgument(
                 "scenario_params_file",
                 default_value=DEFAULT_PARAMS_FILES["scenario"],
-                description="Parameter file to use for scenario",
+                description=(
+                    "Params file specifying scenario if use_simulator:=True."
+                ),
             ),
             DeclareLaunchArgument(
                 "zed_launch_args_file",
                 default_value=DEFAULT_PARAMS_FILES["zed_launch"],
-                description="File containing launch arguments for zed camera launch",
+                description=(
+                    "Launch args for zed camera if use_simulator:=False."
+                ),
             ),
             DeclareLaunchArgument(
                 "run_rviz",
                 default_value="True",
-                description="Whether to use rviz",
+                description="Whether to use rviz.",
                 choices=["True", "False"],
             ),
             OpaqueFunction(function=launch_setup),

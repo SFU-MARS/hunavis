@@ -114,7 +114,7 @@ class PeopleVisualizer(Node):
                     except TransformException as e:
                         self.get_logger().warn(f"Could not transform pose: {e}")
                         return
-                        
+
                     x = p2.point.x
                     y = p2.point.y
 

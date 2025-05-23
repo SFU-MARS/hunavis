@@ -1,3 +1,8 @@
+"""
+Main launch file to start Gazebo simulation and HuNavSim.
+Starts a Gazebo simulation in a scenario with 1 human walking around in an empty room.
+"""
+
 import os
 from os import path
 
@@ -31,9 +36,6 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from scripts import GazeboRosPaths
 
-"""
-Main launch file to start Gazebo simulation and HuNavSim
-"""
 
 WORLD_DIR = "hunavis"  # Change this
 PARAMS_FILE = "hunavsim.yaml"

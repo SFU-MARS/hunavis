@@ -1,8 +1,8 @@
-# Launch arguments for launching zed camera
+# Launch arguments for launching zed_camera.launch.py (from zed_wrapper)
 camera_name: zed
 camera_model: zed2
 node_name: zed_node
 config_path: src/hunavis/params/zed_common.yaml
-publish_urdf: true
-publish_tf: false
-use_sim_time: false
+publish_urdf: "true"
+publish_tf: "false"
+use_sim_time: "false"
