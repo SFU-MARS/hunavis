@@ -25,6 +25,10 @@ Utilities for HUNAVsim, NAV2, and VISualization
     ```bash
     ros2 launch hunavis hudet.launch.py use_simulator:=False zed_launch_args_file:=<zed_launch_args_file>
     ```
+    - If this is the first time deep learning models are run on the camera, the Zed SDK will begin to optimize them. Optionally, follow instructions [here]() to optimize the models manually. For example, the following optimizes all the models that come with the camera:
+        ```bash
+        ZED_Diagnostic -ais 0
+        ```
 5. Run tf publisher node to adjust camera pose with respect to the map.
     ```bash
     ros2 run hunavis tf_keyboard_publisher --ros-args --params-file <zed_and_tf_params_file>
