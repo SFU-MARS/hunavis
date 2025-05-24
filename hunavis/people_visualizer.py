@@ -3,7 +3,8 @@ from typing import List, Union
 import numpy as np
 import rclpy
 from geometry_msgs.msg import Point, PointStamped, Vector3
-from people_msgs.msg import People, Person
+# from people_msgs.msg import People, Person
+from hunav_msgs.msg import Agents
 from rclpy.node import Node
 from std_msgs.msg import ColorRGBA
 from tf2_geometry_msgs import do_transform_point
@@ -32,7 +33,7 @@ class PeopleVisualizer(Node):
         ### Publishers and subscribers
         if self.use_simulator:
             self._subscriber = self.create_subscription(
-                People, "/people", self._position_callback, 10
+                Agents, "/human_states", self._human_callback, 10
             )
 
             self._human_goals_timer = self.create_timer(1.0, self._goal_callback)
@@ -52,7 +53,7 @@ class PeopleVisualizer(Node):
             self._tf_buffer = Buffer()
             self._tf_listener = TransformListener(self._tf_buffer, self)
             self._human_positions_world_publisher = self.create_publisher(
-                People, "/human_positions_world", 10
+                Agents, "/human_positions_world", 10
             )
 
         self._human_positions_publisher = self.create_publisher(
@@ -73,9 +74,39 @@ class PeopleVisualizer(Node):
         # Random offsets to clearly show goals common to multiple people
         self.goal_offsets = -0.05 + 0.1 * np.random.random(len(self.goals))
 
-    def _position_callback(self, msg):
+
+    def _sim_human_state_callback(self, msg):
+        """
+        Get human pose and velocity from topic: /human_states
+        Save the information of every human to: self.people_state (dict)
+        people_state:
+        - 0:
+          - "velocity": jnp.array
+          - "position": np.array
+        - 1:
+          - "velocity": jnp.array
+          - "position": np.array
+        - 2 ...
+            ...     
+        """
+        num_people = len(msg.agents)
+        for i in range(num_people):
+            self.human_markers.append(
+                create_marker
+            )
+                people_state[i]["position"] = np.array(
+                        [
+                            msg.agents[i].position.position.x,
+                            msg.agents[i].position.position.y
+                        ]
+                    )
+
+                
+        self.people_state = people_state
+
+    def _human_callback(self, msg):
         # Human positions
-        human_positions_markers = MarkerArray()
+        self.human_positions = MarkerArray()
 
         if self.use_simulator:
             num_ppl = len(msg.people)
@@ -83,7 +114,7 @@ class PeopleVisualizer(Node):
                 x = msg.people[i].position.x
                 y = msg.people[i].position.y
                 color_rbga = self.human_colors[i % self.num_human_colors]
-                human_positions_markers.markers.append(
+                self.human_markers.append(
                     create_marker(
                         [x, y, i],
                         marker_type="cylinder",
