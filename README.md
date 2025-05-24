@@ -25,7 +25,7 @@ Utilities for HUNAVsim, NAV2, and VISualization
     ```bash
     ros2 launch hunavis hudet.launch.py use_simulator:=False zed_launch_args_file:=<zed_launch_args_file>
     ```
-    - If this is the first time deep learning models are run on the camera, the Zed SDK will begin to optimize them. Optionally, follow instructions [here]() to optimize the models manually. For example, the following optimizes all the models that come with the camera:
+    - If this is the first time deep learning models are run on the camera, the Zed SDK will begin to optimize them. Optionally, follow instructions [here](https://support.stereolabs.com/hc/en-us/articles/9747407795223-How-can-I-optimize-the-ZED-SDK-AI-models-manually) to optimize the models manually. For example, the following optimizes all the models that come with the camera:
         ```bash
         ZED_Diagnostic -ais 0
         ```
