@@ -10,7 +10,10 @@ from std_msgs.msg import ColorRGBA
 from tf2_geometry_msgs import do_transform_point
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+from tf_transformations import quaternion_from_euler
 from visualization_msgs.msg import Marker, MarkerArray
+
+from zed_interfaces.msg import ObjectsStamped
 
 from hunavis.utils import str_to_list_of_np
 
@@ -26,7 +29,9 @@ class PeopleVisualizer(Node):
             .bool_value
         )
         self.goals = (
-            self.declare_parameter("goals", "[]").get_parameter_value().string_value
+            self.declare_parameter("goals", "[]")
+            .get_parameter_value()
+            .string_value
         )
         self.goals = str_to_list_of_np(self.goals)
 
@@ -36,28 +41,29 @@ class PeopleVisualizer(Node):
                 Agents, "/human_states", self._human_callback, 10
             )
 
-            self._human_goals_timer = self.create_timer(1.0, self._goal_callback)
-
-            self._human_goals_publisher = self.create_publisher(
-                MarkerArray, "/human_goals", 10
+            # TODO: Unsure about the goals
+            self._human_goals_timer = self.create_timer(1.0, self._goals_callback)
+            self._goals_publisher = self.create_publisher(
+                MarkerArray, "/goal_markers", 10
             )
-        else:
-            from zed_interfaces.msg import ObjectsStamped
 
+        else:
             self._subscriber = self.create_subscription(
                 ObjectsStamped,
                 "/zed/zed_node/obj_det/objects",
-                self._position_callback,
+                self._human_callback,
                 10,
             )
+            
             self._tf_buffer = Buffer()
             self._tf_listener = TransformListener(self._tf_buffer, self)
+            # TODO: check if conflict
             self._human_positions_world_publisher = self.create_publisher(
-                Agents, "/human_positions_world", 10
+                Agents, "/human_states", 10
             )
 
-        self._human_positions_publisher = self.create_publisher(
-            MarkerArray, "/human_positions", 10
+        self._human_markers_publisher = self.create_publisher(
+            MarkerArray, "/human_markers", 10
         )
         ### Member attributes
         self.human_colors = [
@@ -77,59 +83,80 @@ class PeopleVisualizer(Node):
 
     def _sim_human_state_callback(self, msg):
         """
-        Get human pose and velocity from topic: /human_states
-        Save the information of every human to: self.people_state (dict)
-        people_state:
-        - 0:
-          - "velocity": jnp.array
-          - "position": np.array
-        - 1:
-          - "velocity": jnp.array
-          - "position": np.array
-        - 2 ...
-            ...     
+        Get human pose from topic: /human_states (Agents)
+        Process and save the marker information to: self.human_markers (MarkerArray)  
         """
         num_people = len(msg.agents)
+        marker = Marker()
+
         for i in range(num_people):
+            pose = np.array([msg.agents[i].position.position.x, 
+                             msg.agents[i].position.position.y, 
+                             msg.agents[i].yaw])
+
+            color_rbga = self.human_colors[i % self.num_human_colors]
+
             self.human_markers.append(
-                create_marker
+                self._create_marker(
+                    id = i,
+                    marker_pose = pose,
+                    marker_type = marker.ARROW,
+                    marker_namespace = "human",
+                    color_rgba = color_rbga,
+                    z = 0.75,
+                    height = 1.5,
+                )
             )
-                people_state[i]["position"] = np.array(
-                        [
-                            msg.agents[i].position.position.x,
-                            msg.agents[i].position.position.y
-                        ]
-                    )
 
-                
-        self.people_state = people_state
+    
+    def _real_human_state_callback(self, msg):
+        """
+        Get human pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
+        Process and save the marker information to: 
+                                            - self.human_markers (MarkerArray)  
+                                            - self.human_states (Agents)
+        """
 
-    def _human_callback(self, msg):
-        # Human positions
-        self.human_positions = MarkerArray()
+        for i, object in enumerate(msg.objects):
+            if object.label == "Person":
+                position = object.position
+                pose = np.array([position[0], position[1], object.label_id])
 
-        if self.use_simulator:
-            num_ppl = len(msg.people)
-            for i in range(num_ppl):
-                x = msg.people[i].position.x
-                y = msg.people[i].position.y
-                color_rbga = self.human_colors[i % self.num_human_colors]
+                color_rbga = self.human_colors[object.label_id % self.num_human_colors]
+
+                # Append agent for prediction
+
+                # Append marker for visualization
                 self.human_markers.append(
-                    create_marker(
-                        [x, y, i],
+                    self._create_marker(
+                        id=i,
+                        marker_pose=pose,
                         marker_type="cylinder",
                         marker_namespace="human",
                         color_rgba=color_rbga,
-                        z=0.75,
-                        height=1.5,
+                        text=object.action_state,
                     )
                 )
+
+        self._human_positions_publisher.publish(human_positions_markers)
+
+
+
+    def _human_callback(self, msg):
+        # Human positions
+        self.human_markers = MarkerArray()
+
+        if self.use_simulator:
+            self._sim_human_state_callback(msg)
         else:  # Real world
-            people_msg = People()
+            self._real_human_state_callback(msg)
+
+            people_msg = Agents()
             people_msg.header.stamp = msg.header.stamp
             people_msg.header.frame_id = "map"
 
             for object in msg.objects:
+            # TODO: if this is the step that slows down the system
                 if object.label == "Person":
                     p1 = PointStamped()
                     p1.header = msg.header
@@ -156,8 +183,8 @@ class PeopleVisualizer(Node):
                     else:
                         marker_text = "stationary"
 
-                    human_positions_markers.markers.append(
-                        create_marker(
+                    self.human_markers.markers.append(
+                        self._create_marker(
                             [x, y, object.label_id],
                             marker_type="cylinder",
                             marker_namespace="human",
@@ -168,110 +195,111 @@ class PeopleVisualizer(Node):
             self._human_positions_world_publisher.publish(people_msg)
 
         # Publish
-        self._human_positions_publisher.publish(human_positions_markers)
+        self._human_positions_publisher.publish(self.human_markers)
 
-    def _goal_callback(self):
+    # TODO: Unsure about the goals, why they are written in array?
+    def _goals_callback(self):
         """
         Publishes ground-truth goals for all humans (only in simulation)
         """
-        human_goals_markers = MarkerArray()
+        goal_markers = MarkerArray()
+        marker = Marker()
 
         for i in range(len(self.goals)):
-            human_goals_markers = create_marker_array(
-                self.goals[i] + self.goal_offsets[i],
-                marker_type="cube",
+            goal_markers = self._create_marker_array(
+                id = i,
+                marker_pose = self.goals[i] + self.goal_offsets[i],
+                marker_type=marker.CUBE,
                 marker_namespace=f"goals_{i}",
                 color_rgba=self.human_colors[i % self.num_human_colors],
-                markers=human_goals_markers,
+                markers=goal_markers,
             )
 
-        self._human_goals_publisher.publish(human_goals_markers)
+        self._goals_publisher.publish(goal_markers)
 
+    # TODO: Unsure about the goals, why using array instead of single marker?
+    def _create_marker_array(self, id,
+        marker_pose: np.ndarray,
+        marker_type: str,
+        marker_namespace: str,
+        color_rgba: Union[List, np.ndarray],
+        markers: MarkerArray = None,
+    ):
+        """
+        marker_pose: list or array of (x,y) positions.
+            Shape should be (,3) when listing IDs
+            Shape should be (,2) when not listing IDs
+                (in which case IDs will be the row number)
+        """
+        assert marker_pose.ndim == 2, "xyis must be 2D!"
+        assert marker_pose.shape[1] == 2 or marker_pose.shape[1] == 3
 
-def create_marker_array(
-    xyis: np.ndarray,
-    marker_type: str,
-    marker_namespace: str,
-    color_rgba: Union[List, np.ndarray],
-    markers: MarkerArray = None,
-):
-    """
-    xyis: list or array of (x,y) positions and ID's.
-          Shape should be (,3) when listing IDs
-          Shape should be (,2) when not listing IDs
-              (in which case IDs will be the row number)
-    """
-    assert xyis.ndim == 2, "xyis must be 2D!"
-    assert xyis.shape[1] == 2 or xyis.shape[1] == 3
+        if marker_pose.shape[1] == 2:
+            marker_pose = np.vstack((marker_pose.T, np.arange(marker_pose.shape[0]))).T
 
-    if xyis.shape[1] == 2:
-        xyis = np.vstack((xyis.T, np.arange(xyis.shape[0]))).T
+        if markers is None:
+            markers = MarkerArray()
 
-    if markers is None:
-        markers = MarkerArray()
-
-    for i in range(xyis.shape[0]):
-        markers.markers.append(
-            create_marker(
-                xyis[i, :],
-                marker_type=marker_type,
-                marker_namespace=marker_namespace,
-                color_rgba=color_rgba,
+        for i in range(marker_pose.shape[0]):
+            markers.markers.append(
+                self._create_marker(
+                    id=id,
+                    marker_pose=marker_pose[i, :],
+                    marker_type=marker_type,
+                    marker_namespace=marker_namespace,
+                    color_rgba=color_rgba,
+                )
             )
-        )
 
-    return markers
+        return markers
 
 
-def create_marker(
-    xyi,
-    marker_type="cube",
-    marker_namespace="human",
-    color_rgba=[0.1, 0.0, 1.0, 1.0],
-    z=0.2,
-    height=0.2,
-    text: str = "",
-):
-    """
-    Create a marker for visualization
-    Possible types: 'cube', 'sphere', 'cylinder'
-    """
-    marker = Marker()
+    def _create_marker(self, id, marker_pose, marker_type="default", 
+                      marker_namespace="human", color_rgba=[0.1, 0.0, 1.0, 1.0], 
+                      z=0.2, height=0.2, text: str = ""):
+        """
+        Inner function to create a Marker object for human visualization.
+        """
+        marker = Marker()
 
-    # Position and ID
-    x = xyi[0]
-    y = xyi[1]
-    id = int(xyi[2])
+        # Header
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.header.frame_id = "/map"
 
-    # Type
-    if marker_type == "cube":
-        marker_type = marker.CUBE
+        # Marker specifics
+        marker.ns = marker_namespace
+        marker.id = id
+        marker.action = marker.ADD
+        marker.text = text
 
-    elif marker_type == "sphere":
-        marker_type = marker.SPHERE
+        # Marker type
+        if marker_type == "default":
+            marker_type = marker.CUBE
+        marker.type = marker_type
+    
+        # Marker pose
+        marker.pose.position.x = marker_pose[0]
+        marker.pose.position.y = marker_pose[1]
+        marker.pose.position.z = z
 
-    elif marker_type == "cylinder":
-        marker_type = marker.CYLINDER
+        if marker_pose.shape[0] == 3:
+            qx, qy, qz, qw = quaternion_from_euler(roll=0, pitch=0, 
+                                                   yaw=marker_pose[2])
+            marker.pose.orientation.x = qx
+            marker.pose.orientation.y = qy
+            marker.pose.orientation.z = qz
+            marker.pose.orientation.w = qw
 
-    else:
-        raise ValueError
+        # Marker color
+        r, g, b, a = color_rgba
+        marker.color = ColorRGBA(r=r, g=g, b=b, a=a)
 
-    # Color
-    r, g, b, a = color_rgba
-    color = ColorRGBA(r=r, g=g, b=b, a=a)
+        # Marker scale
+        marker.scale.x = 0.2
+        marker.scale.y = 0.2
+        marker.scale.z = height
 
-    # Populate marker attributes
-    marker.header.frame_id = "/map"
-    marker.ns = marker_namespace
-    marker.type = marker_type
-    marker.action = marker.ADD
-    marker.id = id
-    marker.pose.position = Point(x=x, y=y, z=z)
-    marker.scale = Vector3(x=0.2, y=0.2, z=height)
-    marker.color = color
-    marker.text = text
-
-    return marker
+        return marker
 
 
 def main(args=None):
