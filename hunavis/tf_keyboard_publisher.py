@@ -228,17 +228,23 @@ class TFKeyboardPublisher(Node):
         self.get_logger().info(transform_yaml)
 
     def print_help(self) -> None:
-        """Print concise keyboard usage instructions."""
+        """Print concise keyboard usage instructions with colors."""
+        CYAN = "\033[96m"
+        YELLOW = "\033[93m"
+        GREEN = "\033[92m"
+        RESET = "\033[0m"
+
         help_msg = (
-            "\nKeyboard Controls:\n"
-            + "Translation:  Q/A → +X/-X  W/S → +Y/-Y  E/D → +Z/-Z\n"
-            + "Rotation:     U/J → +Roll/-Roll  I/K → +Pitch/-Pitch  O/L → +Yaw/-Yaw\n"
-            + "Commands:     R → Reset transform  Z → Undo last change\n"
-            + "              H → Toggle handedness  =/- → Change position step\n"
-            + "              ]/[ → Change rotation step\n"
-            + "Press / for help again.\n"
+            f"\n{CYAN}Keyboard Controls:{RESET}\n"
+            + f"{YELLOW}Translation:{RESET}  {GREEN}Q/A{RESET} → +X/-X  {GREEN}W/S{RESET} → +Y/-Y  {GREEN}E/D{RESET} → +Z/-Z\n"
+            + f"{YELLOW}Rotation:{RESET}     {GREEN}U/J{RESET} → +Roll/-Roll  {GREEN}I/K{RESET} → +Pitch/-Pitch  {GREEN}O/L{RESET} → +Yaw/-Yaw\n"
+            + f"{YELLOW}Commands:{RESET}     {GREEN}R{RESET} → Reset transform  {GREEN}Z{RESET} → Undo last change\n"
+            + f"              {GREEN}H{RESET} → Toggle handedness  {GREEN}=/ -{RESET} → Change position step\n"
+            + f"              {GREEN}]/[{RESET} → Change rotation step\n"
+            + f"Press {GREEN}/{RESET} for help again.\n"
         )
         self.get_logger().info(help_msg)
+
 
 
 def main(args: List[str] = None) -> None:
