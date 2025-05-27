@@ -26,6 +26,9 @@ Arguments
 
 - run_rviz:
     - Whether to run rviz
+
+- rviz_file:
+    - File containing rviz settings
 """
 
 import os
@@ -56,6 +59,9 @@ DEFAULT_PARAMS_FILES = {
     "zed_launch": os.path.join(
         get_package_share_directory("hunavis"), "params", "zed_launch_args.yaml"
     ),
+    "rviz": os.path.join(
+        get_package_share_directory("hunavis"), "rviz", "default_sim_view.yaml"
+    ),    
 }
 
 
@@ -64,22 +70,17 @@ def launch_setup(context, *args, **kwargs):
     scenario_params_file = LaunchConfiguration("scenario_params_file")
     zed_launch_args_file = LaunchConfiguration("zed_launch_args_file")
     run_rviz = LaunchConfiguration("run_rviz")
+    rviz_file = LaunchConfiguration("rviz_file")
 
     scenario_params_file_val = scenario_params_file.perform(context)
     zed_launch_args_file_val = zed_launch_args_file.perform(context)
+    rviz_file_val = rviz_file.perform(context)
 
     rviz_node = Node(
         condition=IfCondition(run_rviz),
         package="rviz2",
         executable="rviz2",
-        arguments=[
-            "-d"
-            + os.path.join(
-                get_package_share_directory("hunavis"),
-                "rviz",
-                "default_sim_view.rviz",
-            )
-        ],
+        arguments=["-d" + rviz_file_val],
         output={"both": "log"},
     )
 
@@ -150,6 +151,13 @@ def generate_launch_description():
                 description="Whether to use rviz.",
                 choices=["True", "False"],
             ),
+            DeclareLaunchArgument(
+                "rviz_file",
+                default_value=DEFAULT_PARAMS_FILES["rviz"],
+                description=(
+                    "File containing rviz settings."
+                ),
+            ),            
             OpaqueFunction(function=launch_setup),
         ]
     )
