@@ -1,15 +1,20 @@
-import numpy as np
 import rclpy
-
-from geometry_msgs.msg import Point, PointStamped
-from hunav_msgs.msg import Agents, Agent
 from rclpy.node import Node
 
-from zed_interfaces.msg import ObjectsStamped
-import tf2_geometry_msgs
 import tf2_ros
+import tf2_geometry_msgs
+
+from hunav_msgs.msg import Agents, Agent
+from geometry_msgs.msg import PointStamped
+from zed_interfaces.msg import ObjectsStamped
+
+
 
 class Zed2Nav(Node):
+    '''
+    Receive msg from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
+    Extract human and publish to topic: /human_states (Agents)
+    '''
     def __init__(self):
         super().__init__('zed2nav_node')
         self._zed_subscriber = self.create_subscription(
@@ -33,6 +38,9 @@ class Zed2Nav(Node):
         '''
         Get pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
         Return people_msg; publish to /human_states  (Agents)
+        - human_states (Agents)
+            - header (std_msgs/Header)
+            - agents (hunav_msgs/Agent[])
         '''
 
         human_states = Agents()
@@ -44,49 +52,66 @@ class Zed2Nav(Node):
         for object in msg.objects:
             if object.label == 'Person':
                 agent = self._new_agent(id=object.label_id, obj=object, 
-                                    obj_frame=msg.header.frame_id)
+                                    obj_frame=msg.header.frame_id,
+                                    target_frame=human_states.header.frame_id)
                 human_states.agents.append(agent)
                 # id += 1
-                self.get_logger().info(
-                        f'Agent ID: {agent.id}, Position: {agent.position}, Velocity: {object.velocity}')
+                self.get_logger().info(f'Getting Agent: {agent.id}')
                 
-
         self._human_state_publisher.publish(human_states)
 
 
-    def _new_agent(self, id, obj, obj_frame, target_frame='map'):
+    def _new_agent(self, id, obj, obj_frame, target_frame):
         '''
         Get pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
-        Return a new agent: agent (Agent)
+        Return a new agent: 
+        - agent (Agent)
+            - id (int32)
+            - position (geometry_msgs/Pose)
+                -position (Point)
+                -orientation (Quaternion) Not implemented
+            - yaw (float32) Not implemented
         '''
         agent = Agent()
         agent.id = id
+        
+        # Getting the position of the agent
+        transformed_position = self._get_transformed_position(target_frame, 
+                                                              obj_frame, obj.position)
+        agent.position.position = transformed_position.point
 
+        #TODO: Getting the orientation (or yaw) of agent
+
+        return agent
+
+
+    def _get_transformed_position(self, target_frame, obj_frame, position):
+        '''
+        Inner function to get the position transformed to target_frame:
+        - transformed_position (PointStamped)
+            -point (Point)
+                -x (float)
+                -y (float)
+                -z (float)
+        '''
         # Checking transformation frame
         frame_trans = self._check_transform(target_frame, obj_frame)
 
         # Getting the position of agent
         obj_point = PointStamped()
-        obj_point.point.x = float(obj.position[0])
-        obj_point.point.y = float(obj.position[1])
-        obj_point.point.z = float(obj.position[2])
+        obj_point.point.x = float(position[0])
+        obj_point.point.y = float(position[1])
+        obj_point.point.z = float(position[2])
 
         transformed_position = tf2_geometry_msgs.do_transform_point(
                 obj_point, frame_trans)
-        agent.position.position = Point(x=transformed_position.point.x,
-                                        y=transformed_position.point.y,
-                                        z=transformed_position.point.z)
         
-        #TODO: Try
-        agent.position.position = transformed_position.point
+        return transformed_position
 
-        #TODO: Getting the orientation of agent
 
-        return agent
-    
     def _check_transform(self, target_frame="map", obj_frame="zed_camera_center"):
         '''
-        Inner function to check the transformation
+        Inner function to check the transformation based on the frames
         '''
         try:
             frame_trans=self._tf_buffer.lookup_transform(
@@ -102,11 +127,13 @@ class Zed2Nav(Node):
 
         return frame_trans
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = Zed2Nav()
     rclpy.spin(node)
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
