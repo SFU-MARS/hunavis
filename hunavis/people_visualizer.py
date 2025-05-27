@@ -36,31 +36,31 @@ class PeopleVisualizer(Node):
         self.goals = str_to_list_of_np(self.goals)
 
         ### Publishers and subscribers
-        if self.use_simulator:
-            self._subscriber = self.create_subscription(
-                Agents, "/human_states", self._human_callback, 10
-            )
+        # if self.use_simulator:
+        self._subscriber = self.create_subscription(
+            Agents, "/human_states", self._human_callback, 10
+        )
 
-            # TODO: Unsure about the goals
-            self._human_goals_timer = self.create_timer(1.0, self._goals_callback)
-            self._goals_publisher = self.create_publisher(
-                MarkerArray, "/goal_markers", 10
-            )
+        # TODO: Unsure about the goals
+        self._human_goals_timer = self.create_timer(1.0, self._goals_callback)
+        self._goals_publisher = self.create_publisher(
+            MarkerArray, "/goal_markers", 10
+        )
 
-        else:
-            self._subscriber = self.create_subscription(
-                ObjectsStamped,
-                "/zed/zed_node/obj_det/objects",
-                self._human_callback,
-                10,
-            )
+        # else:
+        #     self._subscriber = self.create_subscription(
+        #         ObjectsStamped,
+        #         "/zed/zed_node/obj_det/objects",
+        #         self._human_callback,
+        #         10,
+        #     )
             
-            self._tf_buffer = Buffer()
-            self._tf_listener = TransformListener(self._tf_buffer, self)
-            # TODO: check if conflict
-            self._human_positions_world_publisher = self.create_publisher(
-                Agents, "/human_states", 10
-            )
+        # self._tf_buffer = Buffer()
+        # self._tf_listener = TransformListener(self._tf_buffer, self)
+
+        #     self._human_positions_world_publisher = self.create_publisher(
+        #         Agents, "/human_states", 10
+            # )
 
         self._human_markers_publisher = self.create_publisher(
             MarkerArray, "/human_markers", 10
@@ -81,7 +81,7 @@ class PeopleVisualizer(Node):
         self.goal_offsets = -0.05 + 0.1 * np.random.random(len(self.goals))
 
 
-    def _sim_human_state_callback(self, msg):
+    def _human_state_callback(self, msg):
         """
         Get human pose from topic: /human_states (Agents)
         Process and save the marker information to: self.human_markers (MarkerArray)  
@@ -109,36 +109,36 @@ class PeopleVisualizer(Node):
             )
 
     
-    def _real_human_state_callback(self, msg):
-        """
-        Get human pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
-        Process and save the marker information to: 
-                                            - self.human_markers (MarkerArray)  
-                                            - self.human_states (Agents)
-        """
+    # def _real_human_state_callback(self, msg):
+    #     """
+    #     Get human pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
+    #     Process and save the marker information to: 
+    #                                         - self.human_markers (MarkerArray)  
+    #                                         - self.human_states (Agents)
+    #     """
 
-        for i, object in enumerate(msg.objects):
-            if object.label == "Person":
-                position = object.position
-                pose = np.array([position[0], position[1], object.label_id])
+    #     for i, object in enumerate(msg.objects):
+    #         if object.label == "Person":
+    #             position = object.position
+    #             pose = np.array([position[0], position[1], object.label_id])
 
-                color_rbga = self.human_colors[object.label_id % self.num_human_colors]
+    #             color_rbga = self.human_colors[object.label_id % self.num_human_colors]
 
-                # Append agent for prediction
+    #             # Append agent for prediction
 
-                # Append marker for visualization
-                self.human_markers.append(
-                    self._create_marker(
-                        id=i,
-                        marker_pose=pose,
-                        marker_type="cylinder",
-                        marker_namespace="human",
-                        color_rgba=color_rbga,
-                        text=object.action_state,
-                    )
-                )
+    #             # Append marker for visualization
+    #             self.human_markers.append(
+    #                 self._create_marker(
+    #                     id=i,
+    #                     marker_pose=pose,
+    #                     marker_type="cylinder",
+    #                     marker_namespace="human",
+    #                     color_rgba=color_rbga,
+    #                     text=object.action_state,
+    #                 )
+    #             )
 
-        self._human_positions_publisher.publish(human_positions_markers)
+    #     self._human_positions_publisher.publish(human_positions_markers)
 
 
 
@@ -146,53 +146,55 @@ class PeopleVisualizer(Node):
         # Human positions
         self.human_markers = MarkerArray()
 
-        if self.use_simulator:
-            self._sim_human_state_callback(msg)
-        else:  # Real world
-            self._real_human_state_callback(msg)
+        # if self.use_simulator:
+        #     self._sim_human_state_callback(msg)
+        # else:  # Real world
+        #     self._real_human_state_callback(msg)
 
-            people_msg = Agents()
-            people_msg.header.stamp = msg.header.stamp
-            people_msg.header.frame_id = "map"
+        self._human_state_callback(msg)
 
-            for object in msg.objects:
-            # TODO: if this is the step that slows down the system
-                if object.label == "Person":
-                    p1 = PointStamped()
-                    p1.header = msg.header
+            # people_msg = Agents()
+            # people_msg.header.stamp = msg.header.stamp
+            # people_msg.header.frame_id = "map"
 
-                    position = object.position
-                    p1.point.x = float(position[0])
-                    p1.point.y = float(position[1])
-                    p1.point.z = float(position[2])
+            # for object in msg.objects:
+            # # TODO: if this is the step that slows down the system
+            #     if object.label == "Person":
+            #         p1 = PointStamped()
+            #         p1.header = msg.header
 
-                    p2 = self._tf_buffer.transform(p1, "map")
-                    x = p2.point.x
-                    y = p2.point.y
+            #         position = object.position
+            #         p1.point.x = float(position[0])
+            #         p1.point.y = float(position[1])
+            #         p1.point.z = float(position[2])
 
-                    person = Person()
-                    person.position = Point(x=x, y=y)
-                    people_msg.people.append(person)
+            #         p2 = self._tf_buffer.transform(p1, "map")
+            #         x = p2.point.x
+            #         y = p2.point.y
 
-                    color_rbga = self.human_colors[
-                        object.label_id % self.num_human_colors
-                    ]
+            #         person = Person()
+            #         person.position = Point(x=x, y=y)
+            #         people_msg.people.append(person)
 
-                    if object.action_state == 1:
-                        marker_text = "moving"
-                    else:
-                        marker_text = "stationary"
+            #         color_rbga = self.human_colors[
+            #             object.label_id % self.num_human_colors
+            #         ]
 
-                    self.human_markers.markers.append(
-                        self._create_marker(
-                            [x, y, object.label_id],
-                            marker_type="cylinder",
-                            marker_namespace="human",
-                            color_rgba=color_rbga,
-                            text=marker_text,
-                        )
-                    )
-            self._human_positions_world_publisher.publish(people_msg)
+            #         if object.action_state == 1:
+            #             marker_text = "moving"
+            #         else:
+            #             marker_text = "stationary"
+
+            #         self.human_markers.markers.append(
+            #             self._create_marker(
+            #                 [x, y, object.label_id],
+            #                 marker_type="cylinder",
+            #                 marker_namespace="human",
+            #                 color_rgba=color_rbga,
+            #                 text=marker_text,
+            #             )
+            #         )
+            # self._human_positions_world_publisher.publish(people_msg)
 
         # Publish
         self._human_positions_publisher.publish(self.human_markers)

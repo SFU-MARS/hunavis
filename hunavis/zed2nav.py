@@ -19,8 +19,8 @@ class Zed2Nav(Node):
             10
         )
 
-        self.tf_buffer = tf2_ros.Buffer()
-        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self._tf_buffer = tf2_ros.Buffer()
+        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer, self)
 
         self._human_state_publisher = self.create_publisher(
             Agents,
@@ -30,25 +30,28 @@ class Zed2Nav(Node):
 
 
     def _zed_callback(self, msg):
+        '''
+        Get pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
+        Return people_msg; publish to /human_states  (Agents)
+        '''
 
-        people_msg = Agents()
-        people_msg.header.stamp = msg.header.stamp
-        people_msg.header.frame_id = "map"
+        human_states = Agents()
+        human_states.header.stamp = msg.header.stamp
+        human_states.header.frame_id = 'map'
 
-        id = 0
-        people_msg.agents = []
+        # id = 0
+        human_states.agents = []
         for object in msg.objects:
             if object.label == 'Person':
-                people_msg.agents.append(
-                    self._new_agent(id=id, obj=object, 
-                                    obj_frame=msg.header.frame_id))
-                id += 1
-
+                agent = self._new_agent(id=object.label_id, obj=object, 
+                                    obj_frame=msg.header.frame_id)
+                human_states.agents.append(agent)
+                # id += 1
                 self.get_logger().info(
-                    f'Agent ID: {object.label_id}, Position: {object.position}, Velocity: {object.velocity}')
+                        f'Agent ID: {agent.id}, Position: {agent.position}, Velocity: {object.velocity}')
                 
 
-        self._human_state_publisher.publish(people_msg)
+        self._human_state_publisher.publish(human_states)
 
 
     def _new_agent(self, id, obj, obj_frame, target_frame='map'):
@@ -73,17 +76,20 @@ class Zed2Nav(Node):
         agent.position.position = Point(x=transformed_position.point.x,
                                         y=transformed_position.point.y,
                                         z=transformed_position.point.z)
+        
+        #TODO: Try
+        agent.position.position = transformed_position.point
 
         #TODO: Getting the orientation of agent
 
         return agent
     
-    def _check_transform(self, target_frame="map", obj_frame=""):
+    def _check_transform(self, target_frame="map", obj_frame="zed_camera_center"):
         '''
         Inner function to check the transformation
         '''
         try:
-            frame_trans=self.tf_buffer.lookup_transform(
+            frame_trans=self._tf_buffer.lookup_transform(
                 target_frame=target_frame, 
                 source_frame=obj_frame, 
                 time=rclpy.time.Time(),
