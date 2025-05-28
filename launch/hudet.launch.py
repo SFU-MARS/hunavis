@@ -15,6 +15,7 @@ from launch_ros.actions import Node
 
 from hunavis.utils import goal_from_params
 
+
 SCENARIO_PARAMS_FILE = "hunavsim.yaml"
 
 DEFAULT_PARAMS_FILE = os.path.join(

@@ -81,6 +81,7 @@ class Zed2Nav(Node):
         agent.position.position = transformed_position.point
 
         #TODO: Getting the orientation (or yaw) of agent
+        agent.yaw = None
 
         return agent
 

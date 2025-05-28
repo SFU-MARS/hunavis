@@ -22,7 +22,7 @@ def goal_from_params(params_file_val):
     with open(params_file_val, "r") as f:
         config = yaml.safe_load(f)
         params = config["hunav_loader"]["ros__parameters"]
-        humans_initial_pose = []
+        # humans_initial_pose = []
         humans_goals = []
         for agent in params["agents"]:
             agent_goals = []
@@ -30,10 +30,10 @@ def goal_from_params(params_file_val):
                 goal = params[agent][goal_key]
                 agent_goals.append([goal["x"], goal["y"]])
 
-            initial_pose = params[agent]["init_pose"]
-            initial_pose = [initial_pose["x"], initial_pose["y"]]
+            # initial_pose = params[agent]["init_pose"]
+            # initial_pose = [initial_pose["x"], initial_pose["y"]]
 
-            humans_initial_pose.append(initial_pose)
+            # humans_initial_pose.append(initial_pose)
             humans_goals.append(agent_goals)
 
     # String representing list of goals as 2D np arrays
