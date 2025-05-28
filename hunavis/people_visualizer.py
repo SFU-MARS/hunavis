@@ -26,7 +26,7 @@ class PeopleVisualizer(Node):
 
         # Declare if using simulator
         self.use_simulator = (
-            self.declare_parameter("use_simulator", True)
+            self.declare_parameter("use_simulator", False)
             .get_parameter_value()
             .bool_value
         )
@@ -117,7 +117,7 @@ class PeopleVisualizer(Node):
                     self._create_marker(
                         id = goal_id,
                         marker_pose = self.goals[agent_i][goal_i] + 
-                                        self.goal_offsets[goal_id%self.num_goal_offsets],
+                                      self.goal_offsets[goal_id%self.num_goal_offsets],
                         marker_namespace = f"goal_{goal_i} for agent_{agent_i}",
                         color_rgba = self.colors[agent_i%self.num_colors],
                         z = 1.25,
