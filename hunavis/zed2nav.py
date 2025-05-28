@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from threading import Event
 
 import tf2_ros
 import tf2_geometry_msgs
@@ -17,12 +18,15 @@ class Zed2Nav(Node):
     '''
     def __init__(self):
         super().__init__('zed2nav_node')
+
         self._zed_subscriber = self.create_subscription(
             ObjectsStamped,
             '/zed/zed_node/obj_det/objects',
             self._zed_callback,
             10
         )
+
+        self.agent_ready = Event()
 
         self._tf_buffer = tf2_ros.Buffer()
         self._tf_listener = tf2_ros.TransformListener(self._tf_buffer, self)
@@ -47,18 +51,19 @@ class Zed2Nav(Node):
         human_states.header.stamp = msg.header.stamp
         human_states.header.frame_id = 'map'
 
-        # id = 0
         human_states.agents = []
         for object in msg.objects:
             if object.label == 'Person':
+                self.agent_ready.set()
                 agent = self._new_agent(id=object.label_id, obj=object, 
                                     obj_frame=msg.header.frame_id,
                                     target_frame=human_states.header.frame_id)
                 human_states.agents.append(agent)
-                # id += 1
+
                 self.get_logger().info(f'Getting Agent: {agent.id}')
                 
         self._human_state_publisher.publish(human_states)
+        self.get_logger().info(f'Publish to /human_states: {human_states.header.stamp}')
 
 
     def _new_agent(self, id, obj, obj_frame, target_frame):
@@ -110,7 +115,7 @@ class Zed2Nav(Node):
         return transformed_position
 
 
-    def _check_transform(self, target_frame="map", obj_frame="zed_camera_center"):
+    def _check_transform(self, target_frame, obj_frame):
         '''
         Inner function to check the transformation based on the frames
         '''
