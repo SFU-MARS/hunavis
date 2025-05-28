@@ -59,7 +59,6 @@ class PeopleVisualizer(Node):
         ]
         self.num_colors = len(self.colors)
 
-
         # If use simulator, potential goals need to be visualized
         if self.use_simulator:
             # Random offsets to clearly show goals common to multiple people
@@ -129,8 +128,8 @@ class PeopleVisualizer(Node):
         """
         Inner function to create a Marker object for human visualization.
         Input:
-        - marker_pose (np.array) ([x,y,yaw] or [x,y,None])
-        - marker_type (int) ARROW=0, CUBE=1, SPHERE=2, CYLINDER=3
+        - marker_pose (np.array): [x,y,yaw] or [x,y,None]
+        - marker_type (int): ARROW=0, CUBE=1, SPHERE=2, CYLINDER=3
         Output:
         - marker (Marker)
         """
@@ -171,7 +170,6 @@ class PeopleVisualizer(Node):
         marker.scale.z = height
 
         return marker
-
 
 
 def main(args=None):
