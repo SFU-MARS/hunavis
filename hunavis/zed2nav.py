@@ -1,10 +1,12 @@
 import rclpy
+
+from hunav_msgs.msg import Agents, Agent
 from rclpy.node import Node
-from threading import Event
 
 import tf2_ros
 import tf2_geometry_msgs
 
+from geometry_msgs.msg import Point, PointStamped
 from hunav_msgs.msg import Agents, Agent
 from geometry_msgs.msg import PointStamped
 from zed_interfaces.msg import ObjectsStamped
@@ -25,8 +27,6 @@ class Zed2Nav(Node):
             self._zed_callback,
             10
         )
-
-        self.agent_ready = Event()
 
         self._tf_buffer = tf2_ros.Buffer()
         self._tf_listener = tf2_ros.TransformListener(self._tf_buffer, self)
@@ -54,16 +54,15 @@ class Zed2Nav(Node):
         human_states.agents = []
         for object in msg.objects:
             if object.label == 'Person':
-                self.agent_ready.set()
                 agent = self._new_agent(id=object.label_id, obj=object, 
                                     obj_frame=msg.header.frame_id,
                                     target_frame=human_states.header.frame_id)
                 human_states.agents.append(agent)
 
                 self.get_logger().info(f'Getting Agent: {agent.id}')
-                
+        
         self._human_state_publisher.publish(human_states)
-        self.get_logger().info(f'Publish to /human_states: {human_states.header.stamp}')
+        self.get_logger().info('Publish to /human_states')
 
 
     def _new_agent(self, id, obj, obj_frame, target_frame):
@@ -86,7 +85,7 @@ class Zed2Nav(Node):
         agent.position.position = transformed_position.point
 
         #TODO: Getting the orientation (or yaw) of agent
-        agent.yaw = None
+        # agent.yaw = None
 
         return agent
 
@@ -102,6 +101,9 @@ class Zed2Nav(Node):
         '''
         # Checking transformation frame
         frame_trans = self._check_transform(target_frame, obj_frame)
+        if frame_trans is None:
+            obj_point = PointStamped()
+            return obj_point
 
         # Getting the position of agent
         obj_point = PointStamped()
@@ -119,6 +121,8 @@ class Zed2Nav(Node):
         '''
         Inner function to check the transformation based on the frames
         '''
+
+        frame_trans = None
         try:
             frame_trans=self._tf_buffer.lookup_transform(
                 target_frame=target_frame, 
