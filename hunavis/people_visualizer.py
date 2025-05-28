@@ -7,10 +7,10 @@ from hunav_msgs.msg import Agents
 from rclpy.node import Node
 from std_msgs.msg import ColorRGBA
 
-from tf_transformations import quaternion_from_euler
 from visualization_msgs.msg import Marker, MarkerArray
 
-from hunavis.utils import str_to_list_of_np
+from hunavis.utils import (str_to_list_of_np, 
+                           quaternion_from_euler)
 
 
 class PeopleVisualizer(Node):
@@ -87,7 +87,7 @@ class PeopleVisualizer(Node):
 
             # TODO: try
             # marker = Marker()
-            human_markers.append(
+            human_markers.markers.append(
                 self._create_marker(
                     id = agent.id,
                     marker_pose = pose,
@@ -108,7 +108,7 @@ class PeopleVisualizer(Node):
         goal_markers = MarkerArray()
 
         for i in range(len(self.goals)):
-            goal_markers.append(
+            goal_markers.markers.append(
                 self._create_marker(
                     id = i,
                     marker_pose = self.goals[i] + self.goal_offsets[i%self.num_goal_offsets],
