@@ -267,7 +267,7 @@ class TFKeyboardPublisher(Node):
         current_transform = self.get_transform_as_list()
         transform_yaml = (
             f"# Current transform (copy this to your YAML file to set as default)\n"
-            f"default_transform: {current_transform}\n"
+            f"current_transform: {current_transform}\n"
             f"parent_frame_id: {self.parent_frame}\n"
             f"child_frame_id: {self.child_frame}\n"
             f"handedness: {self.handedness}\n"
