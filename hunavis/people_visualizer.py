@@ -102,9 +102,9 @@ class PeopleVisualizer(Node):
 
 
     def _goals_callback(self):
-        """
+        '''
         Publishes ground-truth goals for all humans (only in simulation)
-        """
+        '''
         goal_markers = MarkerArray()
 
         for i in range(len(self.goals)):
@@ -125,14 +125,14 @@ class PeopleVisualizer(Node):
     def _create_marker(self, id, marker_pose, marker_type=1, 
                       marker_namespace="human", color_rgba=[0.1, 0.0, 1.0, 1.0], 
                       z=0.2, height=0.2, text: str = ""):
-        """
+        '''
         Inner function to create a Marker object for human visualization.
         Input:
         - marker_pose (np.array): [x,y,yaw] or [x,y,None]
         - marker_type (int): ARROW=0, CUBE=1, SPHERE=2, CYLINDER=3
         Output:
         - marker (Marker)
-        """
+        '''
         marker = Marker()
 
         # Header
