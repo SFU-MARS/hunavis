@@ -41,6 +41,7 @@ def goal_from_params(params_file_val):
 
     return humans_goals_str
 
+
 def quaternion_from_euler(roll=0, pitch=0, yaw=0):
     """
     Convert Euler angles to quaternion using numpy.
@@ -50,7 +51,7 @@ def quaternion_from_euler(roll=0, pitch=0, yaw=0):
 
     Returns a tuple of (x, y, z, w)
     """
-    
+
     cy = np.cos(yaw * 0.5)
     sy = np.sin(yaw * 0.5)
     cp = np.cos(pitch * 0.5)
