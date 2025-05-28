@@ -26,7 +26,7 @@ class PeopleVisualizer(Node):
 
         # Declare if using simulator
         self.use_simulator = (
-            self.declare_parameter("use_simulator", False)
+            self.declare_parameter("use_simulator", True)
             .get_parameter_value()
             .bool_value
         )
@@ -74,7 +74,7 @@ class PeopleVisualizer(Node):
     def _human_callback(self, msg):
         '''
         Get human pose from topic: /human_states (Agents)
-        Process and publish to: /human_markers (MarkerArray) (Marker[]) 
+        Process and publish to: /human_markers (MarkerArray)
         '''
         human_markers = MarkerArray()
 
@@ -99,6 +99,8 @@ class PeopleVisualizer(Node):
                 )
             )
         self._human_markers_publisher.publish(human_markers)
+        self.get_logger().info(f'Publish {len(human_markers.markers)} humans to /human_markers')
+
 
 
     def _goals_callback(self):
@@ -106,20 +108,26 @@ class PeopleVisualizer(Node):
         Publishes ground-truth goals for all humans (only in simulation)
         '''
         goal_markers = MarkerArray()
+        self.get_logger().info(f'Subscribe {len(self.goals)} groups of goals')
 
-        for i in range(len(self.goals)):
-            goal_markers.markers.append(
-                self._create_marker(
-                    id = i,
-                    marker_pose = self.goals[i] + self.goal_offsets[i%self.num_goal_offsets],
-                    marker_namespace = f"goals_{i}",
-                    color_rgba = self.colors[i%self.num_colors],
-                    z = 1.25,
-                    height = 1.25
+        goal_id = 0
+        for agent_i in range(len(self.goals)):
+            for goal_i in range(len(self.goals[agent_i])):
+                goal_markers.markers.append(
+                    self._create_marker(
+                        id = goal_id,
+                        marker_pose = self.goals[agent_i][goal_i] + 
+                                        self.goal_offsets[goal_id%self.num_goal_offsets],
+                        marker_namespace = f"goal_{goal_i} for agent_{agent_i}",
+                        color_rgba = self.colors[agent_i%self.num_colors],
+                        z = 1.25,
+                        height = 1.25
+                    )
                 )
-            )
+                goal_id += 1
 
         self._goals_publisher.publish(goal_markers)
+        self.get_logger().info(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
 
 
     def _create_marker(self, id, marker_pose, marker_type=1, 
@@ -145,7 +153,7 @@ class PeopleVisualizer(Node):
         marker.pose.position.z = z
 
         # getting marker orientation
-        if marker_pose[2] is not None:
+        if len(marker_pose) > 2 and marker_pose[2] is not None:
             qx, qy, qz, qw = quaternion_from_euler(roll=0, pitch=0, 
                                                    yaw=marker_pose[2])
             marker.pose.orientation.x = qx
