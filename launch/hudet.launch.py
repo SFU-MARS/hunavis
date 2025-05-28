@@ -86,6 +86,12 @@ def launch_setup(context, *args, **kwargs):
         ],
     )  # Dummy values; change according to pose changes wrt map
 
+    zed2nav_node = Node(
+        condition=IfCondition(NotSubstitution(use_simulator)),
+        package="hunavis",
+        executable="zed2nav"
+    )
+
     # Load list of human goals from the simulation parameters
     humans_goals_str = goal_from_params(params_file_val)
 
@@ -98,10 +104,11 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
     return [
-        rviz_node,
-        # zed_wrapper_launch,
+        zed_wrapper_launch,
+        zed2nav_node,
         camera_map_tf,
         people_visualizer_node,
+        rviz_node,
     ]
 
 
