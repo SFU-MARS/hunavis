@@ -108,7 +108,7 @@ class PeopleVisualizer(Node):
         Publishes ground-truth goals for all humans (only in simulation)
         '''
         goal_markers = MarkerArray()
-        self.get_logger().info(f'Subscribe {len(self.goals)} groups of goals')
+        self.get_logger().debug(f'Subscribe {len(self.goals)} groups of goals')
 
         goal_id = 0
         for agent_i in range(len(self.goals)):
