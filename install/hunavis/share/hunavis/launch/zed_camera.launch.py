@@ -1,1 +1,0 @@
-/workspaces/ros2_ws/src/hunavis/build/hunavis/launch/zed_camera.launch.py

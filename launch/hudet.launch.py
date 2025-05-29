@@ -10,7 +10,7 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, NotSubstitution
+from launch.substitutions import LaunchConfiguration, NotSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 from hunavis.utils import goal_from_params
@@ -32,8 +32,9 @@ def launch_setup(context, *args, **kwargs):
 
     params_file_val = params_file.perform(context)
 
-    rviz_node = Node(
-        condition=IfCondition(run_rviz),
+    rviz_sim_node = Node(
+        condition=IfCondition(PythonExpression([run_rviz, ' and ', 
+                                                use_simulator])),
         package="rviz2",
         executable="rviz2",
         arguments=[
@@ -42,6 +43,22 @@ def launch_setup(context, *args, **kwargs):
                 get_package_share_directory("hunavis"),
                 "rviz",
                 "default_sim_view.rviz",
+            )
+        ],
+        output={"both": "log"},
+    )
+
+    rviz_real_node = Node(
+        condition=IfCondition(PythonExpression([run_rviz, ' and ', 
+                                                'not ', use_simulator])),
+        package="rviz2",
+        executable="rviz2",
+        arguments=[
+            "-d"
+            + os.path.join(
+                get_package_share_directory("hunavis"),
+                "rviz",
+                "default_real_view.rviz",
             )
         ],
         output={"both": "log"},
@@ -103,13 +120,12 @@ def launch_setup(context, *args, **kwargs):
             {"goals": humans_goals_str},
         ],
     )
-    return [
-        zed_wrapper_launch,
-        zed2nav_node,
-        camera_map_tf,
-        people_visualizer_node,
-        rviz_node,
-    ]
+    return [zed_wrapper_launch,
+            zed2nav_node,
+            camera_map_tf,
+            people_visualizer_node,
+            rviz_sim_node,
+            rviz_real_node]
 
 
 def generate_launch_description():
