@@ -99,7 +99,7 @@ class PeopleVisualizer(Node):
                 )
             )
         self._human_markers_publisher.publish(human_markers)
-        self.get_logger().info(f'Publish {len(human_markers.markers)} humans to /human_markers')
+        self.get_logger().debug(f'Publish {len(human_markers.markers)} humans to /human_markers')
 
 
 
@@ -127,7 +127,7 @@ class PeopleVisualizer(Node):
                 goal_id += 1
 
         self._goals_publisher.publish(goal_markers)
-        self.get_logger().info(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
+        self.get_logger().debug(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
 
 
     def _create_marker(self, id, marker_pose, marker_type=1, 

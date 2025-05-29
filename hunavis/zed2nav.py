@@ -59,7 +59,7 @@ class Zed2Nav(Node):
                                     target_frame=human_states.header.frame_id)
                 human_states.agents.append(agent)
 
-                self.get_logger().info(f'Getting Agent: {agent.id}')
+                self.get_logger().debug(f'Getting Agent: {agent.id}')
         
         self._human_state_publisher.publish(human_states)
         self.get_logger().debug('Publish to /human_states')
