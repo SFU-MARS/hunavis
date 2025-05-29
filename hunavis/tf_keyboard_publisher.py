@@ -12,6 +12,7 @@ from rclpy.node import Node
 from std_srvs.srv import Empty
 from tf2_ros import TransformBroadcaster
 
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 # Helper function to convert Euler angles (roll, pitch, yaw) to a quaternion
 def euler_to_quaternion(roll: float, pitch: float, yaw: float) -> tuple:
@@ -28,6 +29,31 @@ def euler_to_quaternion(roll: float, pitch: float, yaw: float) -> tuple:
     qz = cr * cp * sy - sr * sp * cy
 
     return qx, qy, qz, qw
+
+
+def euler_from_quaternion(qx: float, qy: float, qz: float, qw: float) -> tuple:
+    """
+    Convert a quaternion into Euler angles (roll, pitch, yaw).
+    """
+    # roll (x-axis rotation)
+    sinr_cosp = 2 * (qw * qx + qy * qz)
+    cosr_cosp = 1 - 2 * (qx * qx + qy * qy)
+    roll = math.atan2(sinr_cosp, cosr_cosp)
+
+    # pitch (y-axis rotation)
+    sinp = 2 * (qw * qy - qz * qx)
+    if abs(sinp) >= 1:
+        pitch = math.copysign(math.pi / 2, sinp)  # use 90 degrees if out of range
+    else:
+        pitch = math.asin(sinp)
+
+    # yaw (z-axis rotation)
+    siny_cosp = 2 * (qw * qz + qx * qy)
+    cosy_cosp = 1 - 2 * (qy * qy + qz * qz)
+    yaw = math.atan2(siny_cosp, cosy_cosp)
+
+    return roll, pitch, yaw
+
 
 
 class TFKeyboardPublisher(Node):
@@ -71,7 +97,14 @@ class TFKeyboardPublisher(Node):
         self.br = TransformBroadcaster(self)
         self.timer = self.create_timer(0.1, self.publish_transform)
 
-        # Services
+        # Subscribers and Services
+        self.create_subscription(
+            PoseWithCovarianceStamped,
+            "/initialpose",
+            self.initial_pose_callback,
+            10
+        )
+
         self.create_service(Empty, "reset_transform", self.reset_callback)
 
         self.get_logger().info("TF keyboard node started.")
@@ -90,6 +123,20 @@ class TFKeyboardPublisher(Node):
     def save_history(self) -> None:
         """Save current transform to undo history."""
         self.history.append(self.get_transform_as_list())
+
+    def initial_pose_callback(self, msg: PoseWithCovarianceStamped) -> None:
+        """Update transform from an initial pose message."""
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+        self.z = self.z  # unchanged
+
+        # Convert quaternion to Euler angles (yaw only)
+        q = msg.pose.pose.orientation
+        _, _, yaw = euler_from_quaternion(q.x, q.y, q.z, q.w)
+
+        self.yaw = yaw
+        self.get_logger().info(f"Updated pose from /initialpose: x={self.x:.2f}, y={self.y:.2f}, yaw={math.degrees(self.yaw):.2f}°")
+
 
     def publish_transform(self) -> None:
         """Broadcast the current transform."""
@@ -220,7 +267,7 @@ class TFKeyboardPublisher(Node):
         current_transform = self.get_transform_as_list()
         transform_yaml = (
             f"# Current transform (copy this to your YAML file to set as default)\n"
-            f"default_transform: {current_transform}\n"
+            f"current_transform: {current_transform}\n"
             f"parent_frame_id: {self.parent_frame}\n"
             f"child_frame_id: {self.child_frame}\n"
             f"handedness: {self.handedness}\n"
@@ -228,17 +275,23 @@ class TFKeyboardPublisher(Node):
         self.get_logger().info(transform_yaml)
 
     def print_help(self) -> None:
-        """Print concise keyboard usage instructions."""
+        """Print concise keyboard usage instructions with colors."""
+        CYAN = "\033[96m"
+        YELLOW = "\033[93m"
+        GREEN = "\033[92m"
+        RESET = "\033[0m"
+
         help_msg = (
-            "\nKeyboard Controls:\n"
-            + "Translation:  Q/A → +X/-X  W/S → +Y/-Y  E/D → +Z/-Z\n"
-            + "Rotation:     U/J → +Roll/-Roll  I/K → +Pitch/-Pitch  O/L → +Yaw/-Yaw\n"
-            + "Commands:     R → Reset transform  Z → Undo last change\n"
-            + "              H → Toggle handedness  =/- → Change position step\n"
-            + "              ]/[ → Change rotation step\n"
-            + "Press / for help again.\n"
+            f"\n{CYAN}Keyboard Controls:{RESET}\n"
+            + f"{YELLOW}Translation:{RESET}  {GREEN}Q/A{RESET} → +X/-X  {GREEN}W/S{RESET} → +Y/-Y  {GREEN}E/D{RESET} → +Z/-Z\n"
+            + f"{YELLOW}Rotation:{RESET}     {GREEN}U/J{RESET} → +Roll/-Roll  {GREEN}I/K{RESET} → +Pitch/-Pitch  {GREEN}O/L{RESET} → +Yaw/-Yaw\n"
+            + f"{YELLOW}Commands:{RESET}     {GREEN}R{RESET} → Reset transform  {GREEN}Z{RESET} → Undo last change\n"
+            + f"              {GREEN}H{RESET} → Toggle handedness  {GREEN}=/ -{RESET} → Change position step\n"
+            + f"              {GREEN}]/[{RESET} → Change rotation step\n"
+            + f"Press {GREEN}/{RESET} for help again.\n"
         )
         self.get_logger().info(help_msg)
+
 
 
 def main(args: List[str] = None) -> None:

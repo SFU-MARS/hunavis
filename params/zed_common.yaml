@@ -1,7 +1,14 @@
-# config/common_yaml
-# Common parameters to Stereolabs ZED and ZED mini cameras
+# Custom adjustable camera tf params
+tf_keyboard_publisher:
+  ros__parameters:
+    default_transform: [0.0, 0.0, 0.1, 0.0, 0.0, 0.0]
+    parent_frame_id: "map"
+    child_frame_id: "zed_camera_link"
+    handedness: "right"
+    position_step: 0.01
+    rotation_step: 1.0
 
----
+# Common parameters to Stereolabs ZED and ZED mini cameras
 /**:
     ros__parameters:
         use_sim_time: false # Set to `true` only if there is a publisher for the simulated clock to the `/clock` topic. Normally used in simulation mode.

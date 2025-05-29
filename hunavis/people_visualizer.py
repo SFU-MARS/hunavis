@@ -126,8 +126,74 @@ class PeopleVisualizer(Node):
                 )
                 goal_id += 1
 
+<<<<<<< HEAD
         self._goals_publisher.publish(goal_markers)
         self.get_logger().info(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
+=======
+            for object in msg.objects:
+                if object.label == "Person":
+                    p1 = PointStamped()
+                    p1.header = msg.header
+                    p1.header.stamp = rclpy.time.Time().to_msg()
+
+                    position = object.position
+                    p1.point.x = float(position[0])
+                    p1.point.y = float(position[1])
+                    p1.point.z = float(position[2])
+
+                    try:
+                        p2 = self._tf_buffer.transform(p1, "map")
+                    except TransformException as e:
+                        self.get_logger().warn(f"Could not transform pose: {e}")
+                        return
+
+                    x = p2.point.x
+                    y = p2.point.y
+
+                    person = Person()
+                    person.position = Point(x=x, y=y)
+                    people_msg.people.append(person)
+
+                    color_rbga = self.human_colors[
+                        object.label_id % self.num_human_colors
+                    ]
+
+                    if object.action_state == 1:
+                        marker_text = "moving"
+                    else:
+                        marker_text = "stationary"
+
+                    human_positions_markers.markers.append(
+                        create_marker(
+                            [x, y, object.label_id],
+                            marker_type="cylinder",
+                            marker_namespace="human",
+                            color_rgba=color_rbga,
+                            text=marker_text,
+                        )
+                    )
+            self._human_positions_world_publisher.publish(people_msg)
+
+        # Publish
+        self._human_positions_publisher.publish(human_positions_markers)
+
+    def _goal_callback(self):
+        """
+        Publishes ground-truth goals for all humans (only in simulation)
+        """
+        human_goals_markers = MarkerArray()
+
+        for i in range(len(self.goals)):
+            human_goals_markers = create_marker_array(
+                self.goals[i] + self.goal_offsets[i],
+                marker_type="cube",
+                marker_namespace=f"goals_{i}",
+                color_rgba=self.human_colors[i % self.num_human_colors],
+                markers=human_goals_markers,
+            )
+
+        self._human_goals_publisher.publish(human_goals_markers)
+>>>>>>> origin/main
 
 
     def _create_marker(self, id, marker_pose, marker_type=1, 

@@ -1,3 +1,15 @@
+"""
+Loads the map minimally, notably without having to run a large Nav2 launch file. 
+It launches the map_server (from the nav2_map_server package)
+
+Arguments
+ - use_simulator: 
+    - If True, simulation time will be used (published to /clock topic)
+
+- map_path:
+    - map yaml file to load. Defaults to maps/empty_room.yaml
+"""
+
 import os
 
 import launch_ros.actions
@@ -16,8 +28,8 @@ def launch_setup(context, *args, **kwargs):
     use_simulator = LaunchConfiguration("use_simulator")
     map_path = LaunchConfiguration("map_path")
 
-    use_sim_time = LaunchConfiguration("use_simulator").perform(context) == "True"
-    map_path_val = LaunchConfiguration("map_path").perform(context)
+    use_sim_time = use_simulator.perform(context) == "True"
+    map_path_val = map_path.perform(context)
 
     map_server_cmd = Node(
         package="nav2_map_server",
