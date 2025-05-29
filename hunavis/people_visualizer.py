@@ -99,7 +99,7 @@ class PeopleVisualizer(Node):
                 )
             )
         self._human_markers_publisher.publish(human_markers)
-        self.get_logger().info(f'Publish {len(human_markers.markers)} humans to /human_markers')
+        self.get_logger().debug(f'Publish {len(human_markers.markers)} humans to /human_markers')
 
 
 
@@ -108,7 +108,7 @@ class PeopleVisualizer(Node):
         Publishes ground-truth goals for all humans (only in simulation)
         '''
         goal_markers = MarkerArray()
-        self.get_logger().info(f'Subscribe {len(self.goals)} groups of goals')
+        self.get_logger().debug(f'Subscribe {len(self.goals)} groups of goals')
 
         goal_id = 0
         for agent_i in range(len(self.goals)):
@@ -127,7 +127,7 @@ class PeopleVisualizer(Node):
                 goal_id += 1
 
         self._goals_publisher.publish(goal_markers)
-        self.get_logger().info(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
+        self.get_logger().debug(f'Publish {len(goal_markers.markers)} goals to /goal_markers')
 
 
     def _create_marker(self, id, marker_pose, marker_type=1, 
