@@ -43,10 +43,11 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, NotSubstitution
+from launch.substitutions import LaunchConfiguration, NotSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 from hunavis.utils import goal_from_params
+
 
 SCENARIO_PARAMS_FILE = "hunavsim.yaml"
 
@@ -76,11 +77,28 @@ def launch_setup(context, *args, **kwargs):
     zed_launch_args_file_val = zed_launch_args_file.perform(context)
     rviz_file_val = rviz_file.perform(context)
 
-    rviz_node = Node(
-        condition=IfCondition(run_rviz),
+    rviz_sim_node = Node(
+        condition=IfCondition(PythonExpression([run_rviz, ' and ', 
+                                                use_simulator])),
         package="rviz2",
         executable="rviz2",
         arguments=["-d" + rviz_file_val],
+        output={"both": "log"},
+    )
+
+    rviz_real_node = Node(
+        condition=IfCondition(PythonExpression([run_rviz, ' and ', 
+                                                'not ', use_simulator])),
+        package="rviz2",
+        executable="rviz2",
+        arguments=[
+            "-d"
+            + os.path.join(
+                get_package_share_directory("hunavis"),
+                "rviz",
+                "default_real_view.rviz",
+            )
+        ],
         output={"both": "log"},
     )
 
@@ -104,6 +122,12 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments=zed_launch_args,
     )
 
+    zed2nav_node = Node(
+        condition=IfCondition(NotSubstitution(use_simulator)),
+        package="hunavis",
+        executable="zed2nav"
+    )
+
     # Load list of human goals from the simulation parameters
     humans_goals_str = goal_from_params(scenario_params_file_val)
 
@@ -115,11 +139,12 @@ def launch_setup(context, *args, **kwargs):
             {"goals": humans_goals_str},
         ],
     )
-    return [
-        rviz_node,
-        zed_wrapper_launch,
-        people_visualizer_node,
-    ]
+    return [zed_wrapper_launch,
+            zed2nav_node,
+            camera_map_tf,
+            people_visualizer_node,
+            rviz_sim_node,
+            rviz_real_node]
 
 
 def generate_launch_description():
