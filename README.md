@@ -20,11 +20,14 @@ Utilities for HUNAVsim, NAV2, and VISualization
     ```bash
     ros2 launch hunavis map_server.launch.py use_simulator:=False map_path:=<map_path>
     ```
-    - Tip: Use the "Publish Point" feature in `rviz`, which publishes mouse clicks to `/clicked_point`. tf publisher parameters can be updated based on this.
+    - [`empty_room.yaml`](maps/empty_room.yaml) is an example of `<map_path>`
+    - Tip: Use the `2D Pose Estimate` feature in `rviz` to set the camera pose on the map
+      
 4. Launch human detection
     ```bash
     ros2 launch hunavis hudet.launch.py use_simulator:=False zed_launch_args_file:=<zed_launch_args_file>
     ```
+    - [`zed_launch_args.yaml`](params/zed_launch_args.yaml) is an example of `<zed_launch_args_file>` 
     - If this is the first time deep learning models are run on the camera, the Zed SDK will begin to optimize them. Optionally, follow instructions [here](https://support.stereolabs.com/hc/en-us/articles/9747407795223-How-can-I-optimize-the-ZED-SDK-AI-models-manually) to optimize the models manually. For example, the following optimizes all the models that come with the camera:
         ```bash
         ZED_Diagnostic -aio
