@@ -27,7 +27,7 @@ Utilities for HUNAVsim, NAV2, and VISualization
     ```
     - If this is the first time deep learning models are run on the camera, the Zed SDK will begin to optimize them. Optionally, follow instructions [here](https://support.stereolabs.com/hc/en-us/articles/9747407795223-How-can-I-optimize-the-ZED-SDK-AI-models-manually) to optimize the models manually. For example, the following optimizes all the models that come with the camera:
         ```bash
-        ZED_Diagnostic -ais 0
+        ZED_Diagnostic -aio
         ```
 5. Run tf publisher node to adjust camera pose with respect to the map.
     ```bash
