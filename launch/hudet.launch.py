@@ -122,17 +122,33 @@ def launch_setup(context, *args, **kwargs):
             {"goals": humans_goals_str},
         ],
     )
-    mirrored_map_tf_publisher = Node(
+    x_mirrored_map_tf_publisher = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_tf_mirror',
         arguments=['0', '0', '0', '0', '3.14159', '0', 'map', 'mirrored_map'],
         output='screen'
     )
+    xy_mirrored_map_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_mirror',
+        arguments=['0', '0', '0', '3.14159', '3.14159', '0', 'map', 'mirrored_map'],
+        output='screen'
+    )    
+    y_mirrored_map_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_mirror',
+        arguments=['0', '0', '0', '3.14159', '0', '0', 'map', 'mirrored_map'],
+        output='screen'
+    )
     return [zed_wrapper_launch,
             zed2nav_node,
             people_visualizer_node,
-            mirrored_map_tf_publisher,
+            x_mirrored_map_tf_publisher,
+            xy_mirrored_map_tf_publisher,
+            y_mirrored_map_tf_publisher,
             rviz_node]
 
 
