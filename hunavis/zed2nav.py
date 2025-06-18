@@ -1,4 +1,5 @@
 import rclpy
+import numpy as np
 
 from hunav_msgs.msg import Agents, Agent
 from rclpy.node import Node
@@ -8,7 +9,7 @@ import tf2_geometry_msgs
 
 from geometry_msgs.msg import Point, PointStamped
 from hunav_msgs.msg import Agents, Agent
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, Vector3Stamped
 from zed_interfaces.msg import ObjectsStamped
 
 
@@ -84,11 +85,39 @@ class Zed2Nav(Node):
                                                               obj_frame, obj.position)
         agent.position.position = transformed_position.point
 
-        #TODO: Getting the yaw of agent
-        # agent.yaw = None
+        agent.linear_vel, agent.yaw = self._get_transfromed_velocity(target_frame, 
+                                                                     obj_frame, obj.velocity)
 
         return agent
 
+    def _get_transfromed_velocity(self, target_frame, obj_frame, velocity):
+        '''
+        Inner function to get the velocity transformed to the target_frame:
+        - linear_vel (float): the linear velocity of agent
+        - yaw (float): the heading angle of agent
+        '''
+        frame_trans = self._check_transform(target_frame, obj_frame)
+        if frame_trans is None:
+            linear_vel = Vector3Stamped()
+            return linear_vel
+        
+        linear_vel = Vector3Stamped()
+        linear_vel.vector.x = float(velocity[0])
+        linear_vel.vector.y = float(velocity[1])
+        linear_vel.vector.z = float(velocity[2])
+
+        transformed_velocity = tf2_geometry_msgs.do_transform_vector3(
+                linear_vel, frame_trans)
+        # transformed_velocity = obj_point
+        
+        x_vel = transformed_velocity.vector.x
+        y_vel = transformed_velocity.vector.y
+
+        linear_vel = np.sqrt(x_vel ** 2 + y_vel ** 2)
+        yaw = np.arctan2(y_vel, x_vel)
+
+        return linear_vel, yaw
+    
 
     def _get_transformed_position(self, target_frame, obj_frame, position):
         '''
