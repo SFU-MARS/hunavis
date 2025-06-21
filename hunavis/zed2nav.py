@@ -54,7 +54,7 @@ class Zed2Nav(Node):
 
         human_states.agents = []
         for object in msg.objects:
-            if object.label == 'Person':
+            if object.label.casefold() == "person":
                 agent = self._new_agent(id=object.label_id, obj=object, 
                                     obj_frame=msg.header.frame_id,
                                     target_frame=human_states.header.frame_id)
