@@ -43,10 +43,11 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, NotSubstitution
+from launch.substitutions import LaunchConfiguration, NotSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 from hunavis.utils import goal_from_params
+
 
 SCENARIO_PARAMS_FILE = "hunavsim.yaml"
 
@@ -104,6 +105,12 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments=zed_launch_args,
     )
 
+    zed2nav_node = Node(
+        condition=IfCondition(NotSubstitution(use_simulator)),
+        package="hunavis",
+        executable="zed2nav"
+    )
+
     # Load list of human goals from the simulation parameters
     humans_goals_str = goal_from_params(scenario_params_file_val)
 
@@ -115,11 +122,34 @@ def launch_setup(context, *args, **kwargs):
             {"goals": humans_goals_str},
         ],
     )
-    return [
-        rviz_node,
-        zed_wrapper_launch,
-        people_visualizer_node,
-    ]
+    p_mirrored_map_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_mirror',
+        arguments=['0', '0', '0', '0', '3.14159', '0', 'map', 'p_mirrored_map'],
+        output='screen'
+    )
+    rp_mirrored_map_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_mirror',
+        arguments=['0', '0', '0', '3.14159', '3.14159', '0', 'map', 'rp_mirrored_map'],
+        output='screen'
+    )    
+    r_mirrored_map_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_mirror',
+        arguments=['0', '0', '0', '3.14159', '0', '0', 'map', 'r_mirrored_map'],
+        output='screen'
+    )
+    return [zed_wrapper_launch,
+            zed2nav_node,
+            people_visualizer_node,
+            p_mirrored_map_tf_publisher,
+            rp_mirrored_map_tf_publisher,
+            r_mirrored_map_tf_publisher,
+            rviz_node]
 
 
 def generate_launch_description():

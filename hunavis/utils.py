@@ -22,7 +22,7 @@ def goal_from_params(params_file_val):
     with open(params_file_val, "r") as f:
         config = yaml.safe_load(f)
         params = config["hunav_loader"]["ros__parameters"]
-        humans_initial_pose = []
+        # humans_initial_pose = []
         humans_goals = []
         for agent in params["agents"]:
             agent_goals = []
@@ -30,13 +30,38 @@ def goal_from_params(params_file_val):
                 goal = params[agent][goal_key]
                 agent_goals.append([goal["x"], goal["y"]])
 
-            initial_pose = params[agent]["init_pose"]
-            initial_pose = [initial_pose["x"], initial_pose["y"]]
+            # initial_pose = params[agent]["init_pose"]
+            # initial_pose = [initial_pose["x"], initial_pose["y"]]
 
-            humans_initial_pose.append(initial_pose)
+            # humans_initial_pose.append(initial_pose)
             humans_goals.append(agent_goals)
 
     # String representing list of goals as 2D np arrays
     humans_goals_str = json.dumps(humans_goals)
 
     return humans_goals_str
+
+
+def quaternion_from_euler(roll=0, pitch=0, yaw=0):
+    """
+    Convert Euler angles to quaternion using numpy.
+    Roll  = rotation around x-axis
+    Pitch = rotation around y-axis
+    Yaw   = rotation around z-axis
+
+    Returns a tuple of (x, y, z, w)
+    """
+
+    cy = np.cos(yaw * 0.5)
+    sy = np.sin(yaw * 0.5)
+    cp = np.cos(pitch * 0.5)
+    sp = np.sin(pitch * 0.5)
+    cr = np.cos(roll * 0.5)
+    sr = np.sin(roll * 0.5)
+
+    w = cr * cp * cy + sr * sp * sy
+    x = sr * cp * cy - cr * sp * sy
+    y = cr * sp * cy + sr * cp * sy
+    z = cr * cp * sy - sr * sp * cy
+
+    return (x, y, z, w)

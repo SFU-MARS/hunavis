@@ -283,10 +283,9 @@ class TFKeyboardPublisher(Node):
 
     def print_current_transform(self) -> None:
         """Print the current transform in a YAML-compatible format."""
-        current_transform = self.get_transform_as_list()
         transform_yaml = (
             f"# Current transform (copy this to your YAML file to set as default)\n"
-            f"current_transform: {current_transform}\n"
+            f"current_transform: {self.get_transform_as_list()}\n"
             f"parent_frame_id: {self.parent_frame}\n"
             f"child_frame_id: {self.child_frame}\n"
             f"handedness: {self.handedness}\n"
@@ -298,9 +297,11 @@ class TFKeyboardPublisher(Node):
         GREEN = "\033[92m"
         RESET = "\033[93m"
         if self.locked:
-            self.get_logger().warn(f"Transform is currently LOCKED. Press "
-                                   + f"{GREEN}C{RESET} to toggle lock.")
-            self.print_current_transform()
+            self.get_logger().warn(
+                f"\nTransform is currently LOCKED.\n"
+                + f"Press {GREEN}C{RESET} to toggle lock, {GREEN}/{RESET} for help.\n"
+            )
+            
             return True
         return False
 
@@ -320,8 +321,9 @@ class TFKeyboardPublisher(Node):
             f"{YELLOW}Misc:{RESET}          {GREEN}H{RESET} → Toggle handedness\n"
             f"                {GREEN}= / -{RESET} → Increase/decrease position step\n"
             f"                {GREEN}] / [{RESET} → Increase/decrease rotation step\n"
-            f"{CYAN}=========================================================={RESET}\n"
+            f"{CYAN}==========================================================={RESET}\n"
             f"Press {GREEN}/{RESET} to reprint this help message.\n"
+            + f"Current transform: {self.get_transform_as_list()}\n"
         )
         self.get_logger().info(help_msg)
 

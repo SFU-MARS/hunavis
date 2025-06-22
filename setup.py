@@ -34,6 +34,7 @@ setup(
     entry_points={
         "console_scripts": [
             "publish_global_pose = hunavis.robot_pose_publisher:main",
+            "zed2nav = hunavis.zed2nav:main",
             "people_visualizer = hunavis.people_visualizer:main",
             "tf_keyboard_publisher = hunavis.tf_keyboard_publisher:main",
         ],
