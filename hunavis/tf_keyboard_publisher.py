@@ -93,6 +93,7 @@ class TFKeyboardPublisher(Node):
 
         self.set_transform_from_list(self.default_transform)
         self.history = []
+        self.locked = True
 
         self.br = TransformBroadcaster(self)
         self.timer = self.create_timer(0.1, self.publish_transform)
@@ -109,6 +110,7 @@ class TFKeyboardPublisher(Node):
 
         self.get_logger().info("TF keyboard node started.")
         self.print_help()
+        self.warn_if_locked()
 
         threading.Thread(target=self.keyboard_listener, daemon=True).start()
 
@@ -126,6 +128,9 @@ class TFKeyboardPublisher(Node):
 
     def initial_pose_callback(self, msg: PoseWithCovarianceStamped) -> None:
         """Update transform from an initial pose message."""
+        if self.warn_if_locked():
+            return
+        
         self.x = msg.pose.pose.position.x
         self.y = msg.pose.pose.position.y
         self.z = self.z  # unchanged
@@ -204,7 +209,13 @@ class TFKeyboardPublisher(Node):
         try:
             while rclpy.ok():
                 key = get_key()
-                if key in move_bindings:
+                if key == "c":
+                    self.locked = not self.locked
+                    status = "locked" if self.locked else "unlocked"
+                    self.get_logger().info(f"Transform is now {status}.")
+                elif key in move_bindings:
+                    if self.warn_if_locked():
+                        continue                    
                     self.save_history()
                     dx, dy, dz = move_bindings[key]
                     self.x += dx * self.position_step
@@ -212,6 +223,8 @@ class TFKeyboardPublisher(Node):
                     self.z += dz * self.position_step
                     self.print_current_transform()
                 elif key in rotate_bindings:
+                    if self.warn_if_locked():
+                        continue                    
                     self.save_history()
                     dr, dp, dyaw = rotate_bindings[key]
                     self.roll += dr * self.rotation_step
@@ -219,11 +232,15 @@ class TFKeyboardPublisher(Node):
                     self.yaw += dyaw * self.rotation_step
                     self.print_current_transform()
                 elif key == "r":
+                    if self.warn_if_locked():
+                        continue                    
                     self.save_history()
                     self.set_transform_from_list(self.default_transform)
                     self.get_logger().info("Reset via keyboard.")
                     self.print_current_transform()
                 elif key == "z":
+                    if self.warn_if_locked():
+                        continue                    
                     if self.history:
                         self.set_transform_from_list(self.history.pop())
                         self.get_logger().info("Undo last change.")
@@ -231,6 +248,8 @@ class TFKeyboardPublisher(Node):
                     else:
                         self.get_logger().info("No undo history.")
                 elif key == "h":
+                    if self.warn_if_locked():
+                        continue                    
                     self.handedness = "left" if self.handedness == "right" else "right"
                     self.get_logger().info(f"Switched handedness to: {self.handedness}")
                 elif key == "=":
@@ -274,23 +293,38 @@ class TFKeyboardPublisher(Node):
         )
         self.get_logger().info(transform_yaml)
 
+    def warn_if_locked(self) -> bool:
+        """Log a warning if locked. Returns True if locked, False otherwise."""
+        GREEN = "\033[92m"
+        RESET = "\033[93m"
+        if self.locked:
+            self.get_logger().warn(f"Transform is currently LOCKED. Press "
+                                   + f"{GREEN}C{RESET} to toggle lock.")
+            self.print_current_transform()
+            return True
+        return False
+
+
     def print_help(self) -> None:
-        """Print concise keyboard usage instructions with colors."""
+        """Print concise and formatted keyboard usage instructions with colors."""
         CYAN = "\033[96m"
         YELLOW = "\033[93m"
         GREEN = "\033[92m"
         RESET = "\033[0m"
 
         help_msg = (
-            f"\n{CYAN}Keyboard Controls:{RESET}\n"
-            + f"{YELLOW}Translation:{RESET}  {GREEN}Q/A{RESET} → +X/-X  {GREEN}W/S{RESET} → +Y/-Y  {GREEN}E/D{RESET} → +Z/-Z\n"
-            + f"{YELLOW}Rotation:{RESET}     {GREEN}U/J{RESET} → +Roll/-Roll  {GREEN}I/K{RESET} → +Pitch/-Pitch  {GREEN}O/L{RESET} → +Yaw/-Yaw\n"
-            + f"{YELLOW}Commands:{RESET}     {GREEN}R{RESET} → Reset transform  {GREEN}Z{RESET} → Undo last change\n"
-            + f"              {GREEN}H{RESET} → Toggle handedness  {GREEN}=/ -{RESET} → Change position step\n"
-            + f"              {GREEN}]/[{RESET} → Change rotation step\n"
-            + f"Press {GREEN}/{RESET} for help again.\n"
+            f"\n{CYAN}==================== Keyboard Controls ===================={RESET}\n"
+            f"{YELLOW}Translation:{RESET}   {GREEN}Q/A{RESET} → +X/-X     {GREEN}W/S{RESET} → +Y/-Y     {GREEN}E/D{RESET} → +Z/-Z\n"
+            f"{YELLOW}Rotation:{RESET}      {GREEN}U/J{RESET} → +Roll/-Roll   {GREEN}I/K{RESET} → +Pitch/-Pitch   {GREEN}O/L{RESET} → +Yaw/-Yaw\n"
+            f"{YELLOW}Transform Ops:{RESET} {GREEN}R{RESET} → Reset    {GREEN}Z{RESET} → Undo    {GREEN}C{RESET} → Toggle lock\n"
+            f"{YELLOW}Misc:{RESET}          {GREEN}H{RESET} → Toggle handedness\n"
+            f"                {GREEN}= / -{RESET} → Increase/decrease position step\n"
+            f"                {GREEN}] / [{RESET} → Increase/decrease rotation step\n"
+            f"{CYAN}=========================================================={RESET}\n"
+            f"Press {GREEN}/{RESET} to reprint this help message.\n"
         )
         self.get_logger().info(help_msg)
+
 
 
 
