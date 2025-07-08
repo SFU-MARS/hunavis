@@ -118,6 +118,7 @@ def launch_setup(context, *args, **kwargs):
         package="hunavis",
         executable="people_visualizer",
         parameters=[
+            {"use_sim_time": use_simulator},
             {"use_simulator": use_simulator},
             {"goals": humans_goals_str},
         ],
