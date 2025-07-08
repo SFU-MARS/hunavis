@@ -306,6 +306,7 @@ def generate_launch_description():
         package="hunavis",
         executable="publish_global_pose",
         arguments=["--ros-args", "--log-level", "WARN"],
+        parameters=[{"use_sim_time": use_simulator}],
     )
 
     # Create the launch description and populate
