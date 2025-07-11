@@ -13,6 +13,7 @@ class RobotPosePublisher(Node):
         # Parameters
         self.declare_parameter("update_rate", 60.0)
         self.declare_parameter("frame_id", "map")
+        self.declare_parameter("robot_pose_topic", "/robot_pose")
 
         self.update_rate = (
             self.get_parameter("update_rate").get_parameter_value().double_value
@@ -20,12 +21,15 @@ class RobotPosePublisher(Node):
         self.frame_id = (
             self.get_parameter("frame_id").get_parameter_value().string_value
         )
+        self.robot_pose_topic = (
+            self.get_parameter("robot_pose_topic").get_parameter_value().string_value
+        )        
 
         # Setup callback for dynamically changing parameters
         self.add_on_set_parameters_callback(self.parameter_callback)
 
         # Publisher for the robot pose in map frame
-        self.pose_pub = self.create_publisher(PoseStamped, "/robot_pose", 10)
+        self.pose_pub = self.create_publisher(PoseStamped, self.robot_pose_topic, 10)
 
         # Timer to periodically call the callback to publish the pose
         self.create_timer(1.0 / self.update_rate, self.timer_callback)
