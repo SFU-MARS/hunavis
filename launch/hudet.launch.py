@@ -62,7 +62,7 @@ DEFAULT_PARAMS_FILES = {
     ),
     "rviz": os.path.join(
         get_package_share_directory("hunavis"), "rviz", "default_sim_view.yaml"
-    ),    
+    ),
 }
 
 
@@ -108,7 +108,7 @@ def launch_setup(context, *args, **kwargs):
     zed2nav_node = Node(
         condition=IfCondition(NotSubstitution(use_simulator)),
         package="hunavis",
-        executable="zed2nav"
+        executable="zed2nav",
     )
 
     # Load list of human goals from the simulation parameters
@@ -123,33 +123,35 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
     p_mirrored_map_tf_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_tf_mirror',
-        arguments=['0', '0', '0', '0', '3.14159', '0', 'map', 'p_mirrored_map'],
-        output='screen'
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_tf_mirror",
+        arguments=["0", "0", "0", "0", "3.14159", "0", "map", "p_mirrored_map"],
+        output="screen",
     )
     rp_mirrored_map_tf_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_tf_mirror',
-        arguments=['0', '0', '0', '3.14159', '3.14159', '0', 'map', 'rp_mirrored_map'],
-        output='screen'
-    )    
-    r_mirrored_map_tf_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_tf_mirror',
-        arguments=['0', '0', '0', '3.14159', '0', '0', 'map', 'r_mirrored_map'],
-        output='screen'
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_tf_mirror",
+        arguments=["0", "0", "0", "3.14159", "3.14159", "0", "map", "rp_mirrored_map"],
+        output="screen",
     )
-    return [zed_wrapper_launch,
-            zed2nav_node,
-            people_visualizer_node,
-            p_mirrored_map_tf_publisher,
-            rp_mirrored_map_tf_publisher,
-            r_mirrored_map_tf_publisher,
-            rviz_node]
+    r_mirrored_map_tf_publisher = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_tf_mirror",
+        arguments=["0", "0", "0", "3.14159", "0", "0", "map", "r_mirrored_map"],
+        output="screen",
+    )
+    return [
+        zed_wrapper_launch,
+        zed2nav_node,
+        people_visualizer_node,
+        p_mirrored_map_tf_publisher,
+        rp_mirrored_map_tf_publisher,
+        r_mirrored_map_tf_publisher,
+        rviz_node,
+    ]
 
 
 def generate_launch_description():
@@ -164,16 +166,12 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "scenario_params_file",
                 default_value=DEFAULT_PARAMS_FILES["scenario"],
-                description=(
-                    "Params file specifying scenario if use_simulator:=True."
-                ),
+                description=("Params file specifying scenario if use_simulator:=True."),
             ),
             DeclareLaunchArgument(
                 "zed_launch_args_file",
                 default_value=DEFAULT_PARAMS_FILES["zed_launch"],
-                description=(
-                    "Launch args for zed camera if use_simulator:=False."
-                ),
+                description=("Launch args for zed camera if use_simulator:=False."),
             ),
             DeclareLaunchArgument(
                 "run_rviz",
@@ -184,10 +182,8 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "rviz_file",
                 default_value=DEFAULT_PARAMS_FILES["rviz"],
-                description=(
-                    "File containing rviz settings."
-                ),
-            ),            
+                description=("File containing rviz settings."),
+            ),
             OpaqueFunction(function=launch_setup),
         ]
     )

@@ -6,13 +6,14 @@ from rclpy.node import Node
 from tf2_ros import TransformException
 from rcl_interfaces.msg import SetParametersResult
 
+
 class TransformToPose(Node):
     """
     ROS2 Humble node for converting a TransformStamped to a PoseStamped.
 
     Listens to
     - Transform from source_frame_id to target_frame_id
-    
+
     Publishes to
     - pose_topic (default pose_topic), PoseStamped representation of the transform
 
@@ -22,7 +23,8 @@ class TransformToPose(Node):
     - target_frame_id (str), can be set while node is running
     - pose_topic (str)
     """
-    def __init__(self, node_name = "transform_to_pose", **kwargs):
+
+    def __init__(self, node_name="transform_to_pose", **kwargs):
         super().__init__(node_name, **kwargs)
 
         # Parameters
@@ -39,10 +41,10 @@ class TransformToPose(Node):
         )
         self.target_frame_id = (
             self.get_parameter("target_frame_id").get_parameter_value().string_value
-        )        
+        )
         self.pose_topic = (
             self.get_parameter("pose_topic").get_parameter_value().string_value
-        )        
+        )
 
         # Setup callback for dynamically changing parameters
         self.add_on_set_parameters_callback(self.parameter_callback)
@@ -84,16 +86,20 @@ class TransformToPose(Node):
         except TransformException as e:
             self.get_logger().warn(f"Could not transform pose: {e}")
 
-
     def parameter_callback(self, params):
         for param in params:
             if param.name == "target_frame_id" and param.type_ == param.Type.STRING:
-                self.get_logger().info(f"target_frame_id updated: {self.target_frame_id} -> {param.value}")
+                self.get_logger().info(
+                    f"target_frame_id updated: {self.target_frame_id} -> {param.value}"
+                )
                 self.target_frame_id = param.value
             if param.name == "source_frame_id" and param.type_ == param.Type.STRING:
-                self.get_logger().info(f"source_frame_id updated: {self.source_frame_id} -> {param.value}")
-                self.source_frame_id = param.value                
+                self.get_logger().info(
+                    f"source_frame_id updated: {self.source_frame_id} -> {param.value}"
+                )
+                self.source_frame_id = param.value
         return SetParametersResult(successful=True)
+
 
 def main(args=None):
     rclpy.init(args=args)

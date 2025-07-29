@@ -14,6 +14,7 @@ from tf2_ros import TransformBroadcaster
 
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
+
 # Helper function to convert Euler angles (roll, pitch, yaw) to a quaternion
 def euler_to_quaternion(roll: float, pitch: float, yaw: float) -> tuple:
     cy = math.cos(yaw * 0.5)
@@ -53,7 +54,6 @@ def euler_from_quaternion(qx: float, qy: float, qz: float, qw: float) -> tuple:
     yaw = math.atan2(siny_cosp, cosy_cosp)
 
     return roll, pitch, yaw
-
 
 
 class TFKeyboardPublisher(Node):
@@ -100,10 +100,7 @@ class TFKeyboardPublisher(Node):
 
         # Subscribers and Services
         self.create_subscription(
-            PoseWithCovarianceStamped,
-            "/initialpose",
-            self.initial_pose_callback,
-            10
+            PoseWithCovarianceStamped, "/initialpose", self.initial_pose_callback, 10
         )
 
         self.create_service(Empty, "reset_transform", self.reset_callback)
@@ -130,7 +127,7 @@ class TFKeyboardPublisher(Node):
         """Update transform from an initial pose message."""
         if self.warn_if_locked():
             return
-        
+
         self.x = msg.pose.pose.position.x
         self.y = msg.pose.pose.position.y
         self.z = self.z  # unchanged
@@ -140,8 +137,9 @@ class TFKeyboardPublisher(Node):
         _, _, yaw = euler_from_quaternion(q.x, q.y, q.z, q.w)
 
         self.yaw = yaw
-        self.get_logger().info(f"Updated pose from /initialpose: x={self.x:.2f}, y={self.y:.2f}, yaw={math.degrees(self.yaw):.2f}°")
-
+        self.get_logger().info(
+            f"Updated pose from /initialpose: x={self.x:.2f}, y={self.y:.2f}, yaw={math.degrees(self.yaw):.2f}°"
+        )
 
     def publish_transform(self) -> None:
         """Broadcast the current transform."""
@@ -215,7 +213,7 @@ class TFKeyboardPublisher(Node):
                     self.get_logger().info(f"Transform is now {status}.")
                 elif key in move_bindings:
                     if self.warn_if_locked():
-                        continue                    
+                        continue
                     self.save_history()
                     dx, dy, dz = move_bindings[key]
                     self.x += dx * self.position_step
@@ -224,7 +222,7 @@ class TFKeyboardPublisher(Node):
                     self.print_current_transform()
                 elif key in rotate_bindings:
                     if self.warn_if_locked():
-                        continue                    
+                        continue
                     self.save_history()
                     dr, dp, dyaw = rotate_bindings[key]
                     self.roll += dr * self.rotation_step
@@ -233,14 +231,14 @@ class TFKeyboardPublisher(Node):
                     self.print_current_transform()
                 elif key == "r":
                     if self.warn_if_locked():
-                        continue                    
+                        continue
                     self.save_history()
                     self.set_transform_from_list(self.default_transform)
                     self.get_logger().info("Reset via keyboard.")
                     self.print_current_transform()
                 elif key == "z":
                     if self.warn_if_locked():
-                        continue                    
+                        continue
                     if self.history:
                         self.set_transform_from_list(self.history.pop())
                         self.get_logger().info("Undo last change.")
@@ -249,7 +247,7 @@ class TFKeyboardPublisher(Node):
                         self.get_logger().info("No undo history.")
                 elif key == "h":
                     if self.warn_if_locked():
-                        continue                    
+                        continue
                     self.handedness = "left" if self.handedness == "right" else "right"
                     self.get_logger().info(f"Switched handedness to: {self.handedness}")
                 elif key == "=":
@@ -301,10 +299,9 @@ class TFKeyboardPublisher(Node):
                 f"\nTransform is currently LOCKED.\n"
                 + f"Press {GREEN}C{RESET} to toggle lock, {GREEN}/{RESET} for help.\n"
             )
-            
+
             return True
         return False
-
 
     def print_help(self) -> None:
         """Print concise and formatted keyboard usage instructions with colors."""
@@ -326,8 +323,6 @@ class TFKeyboardPublisher(Node):
             + f"Current transform: {self.get_transform_as_list()}\n"
         )
         self.get_logger().info(help_msg)
-
-
 
 
 def main(args: List[str] = None) -> None:
