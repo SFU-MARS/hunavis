@@ -152,6 +152,7 @@ class PeopleVisualizer(Node):
         # Header
         marker.header.stamp = self.get_clock().now().to_msg()
         marker.header.frame_id = "/map"
+        marker.lifetime = rclpy.duration.Duration(seconds=2.0).to_msg()
 
         # getting marker position
         marker.pose.position.x = marker_pose[0]
