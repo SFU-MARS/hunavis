@@ -68,7 +68,7 @@ class Zed2Nav(Node):
         self._human_state_publisher.publish(human_states)
         self.get_logger().debug("Publish to /human_states")
 
-    def _new_agent(self, id, obj, frame_trans):
+    def _new_agent(self, id: int, obj: ObjectsStamped, frame_trans):
         """
         Get pose from topic: /zed/zed_node/obj_det/objects (ObjectsStamped)
         Return a new agent:
@@ -85,9 +85,13 @@ class Zed2Nav(Node):
         transformed_position = self._get_transformed_position(frame_trans, obj.position)
         agent.position.position = transformed_position.point
 
-        agent.linear_vel, agent.yaw = self._get_transformed_velocity(
+        x_vel, y_vel = self._get_transformed_velocity(
             frame_trans, obj.velocity
         )
+        agent.velocity.linear.x, agent.velocity.linear.y = x_vel, y_vel
+        agent.linear_vel = np.sqrt(x_vel**2 + y_vel**2)
+        agent.yaw = np.arctan2(y_vel, x_vel)
+
         return agent
 
     def _get_transformed_velocity(self, frame_trans, velocity):
@@ -109,10 +113,9 @@ class Zed2Nav(Node):
         x_vel = transformed_velocity.vector.x
         y_vel = transformed_velocity.vector.y
 
-        linear_vel = np.sqrt(x_vel**2 + y_vel**2)
-        yaw = np.arctan2(y_vel, x_vel)
 
-        return linear_vel, yaw
+
+        return x_vel, y_vel
 
     def _get_transformed_position(self, frame_trans, position):
         """

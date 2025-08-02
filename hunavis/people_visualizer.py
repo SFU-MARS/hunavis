@@ -89,7 +89,18 @@ class PeopleVisualizer(Node):
                     id=agent.id,
                     marker_pose=pose,
                     marker_type=0,  # ARROW=0, CUBE=1, SPHERE=2, CYLINDER=3
-                    marker_namespace="human",
+                    marker_namespace="human_arrow",
+                    color_rgba=color_rgba,
+                    z=0.75,
+                    height=1.5,
+                )
+            )
+            human_markers.markers.append(
+                self._create_marker(
+                    id=agent.id,
+                    marker_pose=pose[:2],
+                    marker_type=3,  # ARROW=0, CUBE=1, SPHERE=2, CYLINDER=3
+                    marker_namespace="human_cylinder",
                     color_rgba=color_rgba,
                     z=0.75,
                     height=1.5,
