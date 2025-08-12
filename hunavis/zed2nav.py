@@ -1,3 +1,4 @@
+from copy import deepcopy
 import rclpy
 import numpy as np
 
@@ -19,8 +20,8 @@ class Zed2Nav(Node):
     Extract human and publish to topic: /human_states (Agents)
     """
 
-    def __init__(self):
-        super().__init__("zed2nav_node")
+    def __init__(self, node_name="zed2nav_node"):
+        super().__init__(node_name)
 
         self._zed_subscriber = self.create_subscription(
             ObjectsStamped, "/zed/zed_node/obj_det/objects", self._zed_callback, 10
@@ -43,9 +44,9 @@ class Zed2Nav(Node):
         # transform being unavailable)
         human_frame_id = "map"
 
-        frame_trans = self._check_transform(human_frame_id, msg.header.frame_id)
+        tf_frame = self._check_transform(human_frame_id, msg.header.frame_id)
 
-        if frame_trans is None:
+        if tf_frame is None:
             return
 
         human_states = Agents()
@@ -56,10 +57,11 @@ class Zed2Nav(Node):
 
         for object in msg.objects:
             if object.label.casefold() == "person":
+                tf_frame_copy = deepcopy(tf_frame)
                 agent = self._new_agent(
                     id=object.label_id,
                     obj=object,
-                    frame_trans=frame_trans,
+                    frame_trans=tf_frame_copy,
                 )
                 human_states.agents.append(agent)
 
