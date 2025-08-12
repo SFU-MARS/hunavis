@@ -125,21 +125,21 @@ def launch_setup(context, *args, **kwargs):
     p_mirrored_map_tf_publisher = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_tf_mirror",
+        name="static_tf_p_mirror",
         arguments=["0", "0", "0", "0", "3.14159", "0", "map", "p_mirrored_map"],
         output="screen",
     )
     rp_mirrored_map_tf_publisher = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_tf_mirror",
+        name="static_tf_rp_mirror",
         arguments=["0", "0", "0", "3.14159", "3.14159", "0", "map", "rp_mirrored_map"],
         output="screen",
     )
     r_mirrored_map_tf_publisher = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="static_tf_mirror",
+        name="static_tf_r_mirror",
         arguments=["0", "0", "0", "3.14159", "0", "0", "map", "r_mirrored_map"],
         output="screen",
     )
