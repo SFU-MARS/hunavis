@@ -96,17 +96,19 @@ class Zed2Nav(Node):
 
         return agent
 
-    def _get_transformed_velocity(self, frame_trans, velocity):
+    def _get_transformed_velocity(self, frame_trans, v_relative):
         """
         Inner function to get the velocity transformed to the target_frame:
         - linear_vel (float): the linear velocity of agent
         - yaw (float): the heading angle of agent
+
+        WARNING: v_relative must account for ego motion!
         """
         linear_vel = Vector3Stamped()
 
-        linear_vel.vector.x = float(velocity[0])
-        linear_vel.vector.y = float(velocity[1])
-        linear_vel.vector.z = float(velocity[2])
+        linear_vel.vector.x = float(v_relative[0])
+        linear_vel.vector.y = float(v_relative[1])
+        linear_vel.vector.z = float(v_relative[2])
 
         transformed_velocity = tf2_geometry_msgs.do_transform_vector3(
             linear_vel, frame_trans
