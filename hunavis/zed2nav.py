@@ -11,8 +11,12 @@ import tf2_geometry_msgs
 from geometry_msgs.msg import Point, PointStamped
 from hunav_msgs.msg import Agents, Agent
 from geometry_msgs.msg import PointStamped, Vector3Stamped
-from zed_interfaces.msg import ObjectsStamped
 
+# For compatibility with different versions of ZED SDK
+try:
+    from zed_interfaces.msg import ObjectsStamped
+except:
+    from zed_msgs.msg import ObjectsStamped
 
 class Zed2Nav(Node):
     """
