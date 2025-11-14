@@ -14,9 +14,9 @@ from geometry_msgs.msg import PointStamped, Vector3Stamped
 
 # For compatibility with different versions of ZED SDK
 try:
-    from zed_interfaces.msg import ObjectsStamped
-except:
     from zed_msgs.msg import ObjectsStamped
+except:
+    from zed_interfaces.msg import ObjectsStamped
 
 class Zed2Nav(Node):
     """

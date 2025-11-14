@@ -2,7 +2,7 @@
 camera_name: zed
 camera_model: zed2
 node_name: zed_node
-config_path: src/hunavis/params/zed_common.yaml
+ros_params_override_path: src/hunavis/params/zed_common.yaml
 publish_urdf: "true"
 publish_tf: "false"
 use_sim_time: "false"
