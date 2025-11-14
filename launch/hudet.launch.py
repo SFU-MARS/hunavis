@@ -43,7 +43,7 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, NotSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, NotSubstitution, AndSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 from hunavis.utils import goal_from_params
@@ -68,6 +68,8 @@ DEFAULT_PARAMS_FILES = {
 
 def launch_setup(context, *args, **kwargs):
     use_simulator = LaunchConfiguration("use_simulator")
+    run_zed2nav = LaunchConfiguration("run_zed2nav")
+    
     scenario_params_file = LaunchConfiguration("scenario_params_file")
     zed_launch_args_file = LaunchConfiguration("zed_launch_args_file")
     run_rviz = LaunchConfiguration("run_rviz")
@@ -106,7 +108,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     zed2nav_node = Node(
-        condition=IfCondition(NotSubstitution(use_simulator)),
+        condition=IfCondition(AndSubstitution(run_zed2nav, NotSubstitution(use_simulator))),
         package="hunavis",
         executable="zed2nav",
     )
@@ -163,6 +165,13 @@ def generate_launch_description():
                 description="Whether to use simulator.",
                 choices=["True", "False"],
             ),
+            DeclareLaunchArgument(
+                "run_zed2nav",
+                default_value="True",
+                description="Whether to run the Zed2Nav node, which standardizes " \
+                "simulation and real-world topic names.",
+                choices=["True", "False"],
+            ),            
             DeclareLaunchArgument(
                 "scenario_params_file",
                 default_value=DEFAULT_PARAMS_FILES["scenario"],
